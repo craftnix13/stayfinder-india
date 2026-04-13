@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Analytics — Nestify</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    .analytics-chart-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .chart-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+    }
+    .top-listing-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .top-listing-row:last-child { border-bottom: none; }
+    .rank-badge {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .rank-1 { background: #FFD700; color: #000; }
+    .rank-2 { background: #C0C0C0; color: #000; }
+    .rank-3 { background: #CD7F32; color: #fff; }
+    .rank-other { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); }
+    .progress-bar-custom {
+      height: 6px;
+      background: var(--surface);
+      border-radius: 4px;
+      overflow: hidden;
+      flex: 1;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent, #ff6b00);
+      border-radius: 4px;
+      transition: width 0.6s ease;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-nestify" id="mainNavbar">
+    <div class="container-fluid px-3">
+      <a class="navbar-brand navbar-brand-nestify" href="index.html">
+        <i class="bi bi-house-heart-fill"></i> NEST<span>IFY</span>
+      </a>
+      <span class="badge bg-danger ms-2" style="font-size:0.7rem;">ADMIN</span>
+      <div class="ms-auto nav-auth-section"></div>
+    </div>
+  </nav>
+
+  <div class="dashboard-layout">
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3 p-0">
+          <div class="dashboard-sidebar">
+            <nav class="dashboard-sidebar-nav">
+              <a href="admin-dashboard.html" class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+              <a href="manage-listings.html" class="sidebar-link"><i class="bi bi-building"></i> Manage Listings</a>
+              <a href="manage-users.html" class="sidebar-link"><i class="bi bi-people"></i> Manage Users</a>
+              <a href="admin-reviews.html" class="sidebar-link"><i class="bi bi-star"></i> Reviews</a>
+              <a href="admin-analytics.html" class="sidebar-link active"><i class="bi bi-bar-chart"></i> Analytics</a>
+              <a href="admin-settings.html" class="sidebar-link"><i class="bi bi-gear"></i> Settings</a>
+            </nav>
+          </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+          <div class="dashboard-content">
+            <div class="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-2">
+              <div>
+                <h3 class="fw-700 mb-1">Platform Analytics</h3>
+                <p class="text-muted-custom fs-sm">Insights across listings, users, and engagement</p>
+              </div>
+              <div id="lastUpdated" class="text-muted-custom fs-sm mt-1"></div>
+            </div>
+
+            <!-- KPI Stats -->
+            <div class="row g-3 mb-4">
+              <div class="col-xl-2 col-md-4 col-6">
+                <div class="stat-card">
+                  <div class="stat-icon orange"><i class="bi bi-building"></i></div>
+                  <div class="stat-info"><h3 id="kpiTotal">—</h3><p>Total Listings</p></div>
+                </div>
+              </div>
+              <div class="col-xl-2 col-md-4 col-6">
+                <div class="stat-card">
+                  <div class="stat-icon green"><i class="bi bi-eye"></i></div>
+                  <div class="stat-info"><h3 id="kpiViews">—</h3><p>Total Views</p></div>
+                </div>
+              </div>
+              <div class="col-xl-2 col-md-4 col-6">
+                <div class="stat-card">
+                  <div class="stat-icon blue"><i class="bi bi-people"></i></div>
+                  <div class="stat-info"><h3 id="kpiUsers">—</h3><p>Total Users</p></div>
+                </div>
+              </div>
+              <div class="col-xl-2 col-md-4 col-6">
+                <div class="stat-card">
+                  <div class="stat-icon yellow"><i class="bi bi-star"></i></div>
+                  <div class="stat-info"><h3 id="kpiReviews">—</h3><p>Reviews</p></div>
+                </div>
+              </div>
+              <div class="col-xl-2 col-md-4 col-6">
+                <div class="stat-card">
+                  <div class="stat-icon green"><i class="bi bi-check-circle"></i></div>
+                  <div class="stat-info"><h3 id="kpiApprovalRate">—</h3><p>Approval Rate</p></div>
+                </div>
+              </div>
+              <div class="col-xl-2 col-md-4 col-6">
+                <div class="stat-card">
+                  <div class="stat-icon blue"><i class="bi bi-graph-up"></i></div>
+                  <div class="stat-info"><h3 id="kpiAvgViews">—</h3><p>Avg Views/Listing</p></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="row g-4 mb-4">
+              <div class="col-lg-6">
+                <div class="analytics-chart-card">
+                  <div class="chart-title"><i class="bi bi-pie-chart-fill text-accent"></i> Listings by Status</div>
+                  <div id="statusChartWrap" style="position:relative;height:220px;">
+                    <canvas id="statusChart"></canvas>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="analytics-chart-card">
+                  <div class="chart-title"><i class="bi bi-tags-fill text-accent"></i> Listings by Type</div>
+                  <div id="typeChartWrap" style="position:relative;height:220px;">
+                    <canvas id="typeChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="row g-4 mb-4">
+              <div class="col-lg-8">
+                <div class="analytics-chart-card">
+                  <div class="chart-title"><i class="bi bi-geo-alt-fill text-accent"></i> Listings by City</div>
+                  <div style="position:relative;height:240px;">
+                    <canvas id="cityChart"></canvas>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-4">
+                <div class="analytics-chart-card">
+                  <div class="chart-title"><i class="bi bi-person-badge-fill text-accent"></i> Users by Role</div>
+                  <div style="position:relative;height:240px;">
+                    <canvas id="roleChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Top Listings by Views -->
+            <div class="row g-4 mb-4">
+              <div class="col-lg-6">
+                <div class="analytics-chart-card">
+                  <div class="chart-title"><i class="bi bi-trophy-fill text-accent"></i> Top 5 Listings by Views</div>
+                  <div id="topViewsList">
+                    <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-accent"></div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="analytics-chart-card">
+                  <div class="chart-title"><i class="bi bi-currency-rupee text-accent"></i> Price Range Distribution</div>
+                  <div style="position:relative;height:220px;">
+                    <canvas id="priceChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Amenities heatmap -->
+            <div class="analytics-chart-card mb-4">
+              <div class="chart-title"><i class="bi bi-grid-fill text-accent"></i> Most Popular Amenities</div>
+              <div id="amenitiesGrid" class="d-flex flex-wrap gap-2 mt-2">
+                <div class="text-center py-2 w-100"><div class="spinner-border spinner-border-sm text-accent"></div></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCB3n4oRMttZP3hEstN1WhQIUSfnMcNK3o",
+      authDomain: "stayfinder-india.firebaseapp.com",
+      projectId: "stayfinder-india",
+      storageBucket: "stayfinder-india.firebasestorage.app",
+      messagingSenderId: "645510509071",
+      appId: "1:645510509071:web:d9924d4780d3f185a5e97a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const ACCENT = '#ff6b00';
+    const CHART_COLORS = ['#ff6b00','#3b82f6','#22c55e','#eab308','#a855f7','#ef4444','#06b6d4','#f43f5e'];
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = 'login.html'; return; }
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (!snap.exists() || snap.data().role !== 'admin') {
+        window.location.href = 'index.html'; return;
+      }
+      loadAnalytics();
+    });
+
+    async function loadAnalytics() {
+      try {
+        const [listingsSnap, usersSnap, reviewsSnap] = await Promise.all([
+          getDocs(collection(db, "listings")),
+          getDocs(collection(db, "users")),
+          getDocs(collection(db, "reviews"))
+        ]);
+
+        const listings = listingsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const users = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const reviews = reviewsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        document.getElementById('lastUpdated').textContent = 'Updated: ' + new Date().toLocaleTimeString('en-IN');
+
+        // KPIs
+        const totalViews = listings.reduce((s, l) => s + (l.viewsCount || 0), 0);
+        const approved = listings.filter(l => l.status === 'approved').length;
+        const approvalRate = listings.length ? Math.round((approved / listings.length) * 100) : 0;
+        const avgViews = listings.length ? Math.round(totalViews / listings.length) : 0;
+
+        document.getElementById('kpiTotal').textContent = listings.length;
+        document.getElementById('kpiViews').textContent = totalViews.toLocaleString('en-IN');
+        document.getElementById('kpiUsers').textContent = users.length;
+        document.getElementById('kpiReviews').textContent = reviews.length;
+        document.getElementById('kpiApprovalRate').textContent = approvalRate + '%';
+        document.getElementById('kpiAvgViews').textContent = avgViews;
+
+        // Status chart
+        const statusCount = { approved: 0, pending: 0, rejected: 0 };
+        listings.forEach(l => { if (statusCount[l.status] !== undefined) statusCount[l.status]++; });
+        new Chart(document.getElementById('statusChart'), {
+          type: 'doughnut',
+          data: {
+            labels: ['Approved', 'Pending', 'Rejected'],
+            datasets: [{ data: [statusCount.approved, statusCount.pending, statusCount.rejected],
+              backgroundColor: ['#22c55e', '#eab308', '#ef4444'], borderWidth: 0 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#94a3b8', font: { size: 12 } } } } }
+        });
+
+        // Type chart
+        const typeCount = {};
+        listings.forEach(l => { const t = l.type || 'Other'; typeCount[t] = (typeCount[t] || 0) + 1; });
+        new Chart(document.getElementById('typeChart'), {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(typeCount),
+            datasets: [{ data: Object.values(typeCount), backgroundColor: CHART_COLORS, borderWidth: 0 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#94a3b8', font: { size: 12 } } } } }
+        });
+
+        // City chart
+        const cityCount = {};
+        listings.forEach(l => { const c = l.city || 'Unknown'; cityCount[c] = (cityCount[c] || 0) + 1; });
+        const sortedCities = Object.entries(cityCount).sort((a, b) => b[1] - a[1]).slice(0, 8);
+        new Chart(document.getElementById('cityChart'), {
+          type: 'bar',
+          data: {
+            labels: sortedCities.map(c => c[0]),
+            datasets: [{ label: 'Listings', data: sortedCities.map(c => c[1]),
+              backgroundColor: ACCENT, borderRadius: 6, borderSkipped: false }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+              y: { ticks: { color: '#94a3b8', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            }
+          }
+        });
+
+        // Role chart
+        const roleCount = {};
+        users.forEach(u => { const r = u.role || 'user'; roleCount[r] = (roleCount[r] || 0) + 1; });
+        new Chart(document.getElementById('roleChart'), {
+          type: 'pie',
+          data: {
+            labels: Object.keys(roleCount),
+            datasets: [{ data: Object.values(roleCount), backgroundColor: CHART_COLORS, borderWidth: 0 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#94a3b8', font: { size: 12 } } } } }
+        });
+
+        // Top listings by views
+        const topListings = [...listings].sort((a, b) => (b.viewsCount || 0) - (a.viewsCount || 0)).slice(0, 5);
+        const maxViews = topListings[0]?.viewsCount || 1;
+        document.getElementById('topViewsList').innerHTML = topListings.length ? topListings.map((l, i) => `
+          <div class="top-listing-row">
+            <div class="rank-badge rank-${i < 3 ? i+1 : 'other'}">${i+1}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:0.85rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(l.title)}</div>
+              <div class="d-flex align-items-center gap-2 mt-1">
+                <div class="progress-bar-custom">
+                  <div class="progress-fill" style="width:${((l.viewsCount||0)/maxViews)*100}%"></div>
+                </div>
+                <span style="font-size:0.75rem;color:var(--text-muted);white-space:nowrap;">${(l.viewsCount||0).toLocaleString('en-IN')} views</span>
+              </div>
+            </div>
+          </div>`).join('') : '<p class="text-muted-custom text-center fs-sm py-3">No data</p>';
+
+        // Price chart
+        const priceBuckets = { '< 5K': 0, '5K–10K': 0, '10K–20K': 0, '20K–50K': 0, '50K+': 0 };
+        listings.forEach(l => {
+          const p = l.price || 0;
+          if (p < 5000) priceBuckets['< 5K']++;
+          else if (p < 10000) priceBuckets['5K–10K']++;
+          else if (p < 20000) priceBuckets['10K–20K']++;
+          else if (p < 50000) priceBuckets['20K–50K']++;
+          else priceBuckets['50K+']++;
+        });
+        new Chart(document.getElementById('priceChart'), {
+          type: 'bar',
+          data: {
+            labels: Object.keys(priceBuckets),
+            datasets: [{ label: 'Listings', data: Object.values(priceBuckets),
+              backgroundColor: CHART_COLORS.slice(0, 5), borderRadius: 6, borderSkipped: false }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+              y: { ticks: { color: '#94a3b8', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            }
+          }
+        });
+
+        // Amenities
+        const amenityCount = {};
+        listings.forEach(l => {
+          (l.amenities || []).forEach(a => { amenityCount[a] = (amenityCount[a] || 0) + 1; });
+        });
+        const sortedAmenities = Object.entries(amenityCount).sort((a, b) => b[1] - a[1]).slice(0, 20);
+        const maxAm = sortedAmenities[0]?.[1] || 1;
+        document.getElementById('amenitiesGrid').innerHTML = sortedAmenities.length ?
+          sortedAmenities.map(([name, count]) => {
+            const intensity = Math.round((count / maxAm) * 100);
+            return `<span style="
+              background: rgba(255,107,0,${0.15 + (intensity/100)*0.65});
+              border: 1px solid rgba(255,107,0,${0.3 + (intensity/100)*0.5});
+              color: var(--text-primary);
+              padding: 0.3rem 0.75rem;
+              border-radius: 20px;
+              font-size: 0.82rem;
+              white-space: nowrap;
+              cursor: default;
+            " title="${count} listings">
+              ${esc(name)} <span style="color:var(--accent);font-weight:700;">${count}</span>
+            </span>`;
+          }).join('') : '<p class="text-muted-custom fs-sm">No amenity data</p>';
+
+      } catch(err) {
+        console.error(err);
+        if (window.showToast) window.showToast('Error: ' + err.message, 'error');
+      }
+    }
+
+    function esc(t) {
+      if (!t) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>
