@@ -4,13 +4,10 @@
 // ============================================
 
 // ---- Firebase Auth Navbar (runs as module separately) ----
-// We use a dynamic import so this non-module script can still work
 (function initNavbarAuth() {
-  // Only run on pages that have the nav-auth-section
   const navAuth = document.getElementById('navAuth') || document.querySelector('.nav-auth-section');
   if (!navAuth) return;
 
-  // Dynamically load Firebase auth state
   const script = document.createElement('script');
   script.type = 'module';
   script.textContent = `
@@ -31,18 +28,150 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // =============================================
+    // PLATFORM SETTINGS LOADER
+    // Yeh function har page pe settings apply karta hai
+    // =============================================
+    async function applyPlatformSettings(userRole) {
+      try {
+        const snap = await getDoc(doc(db, "settings", "platform_settings"));
+        if (!snap.exists()) return;
+
+        const s = snap.data();
+
+        // Global access — dusre pages bhi use kar saken
+        window.platformSettings = s;
+
+        // --- 1. Platform Name ---
+        if (s.platformName) {
+          // Browser tab title update
+          const brandEls = document.querySelectorAll('.navbar-brand-nestify');
+          brandEls.forEach(el => {
+            // Brand ke andar NEST<span>IFY</span> structure maintain karo
+            const upper = s.platformName.toUpperCase();
+            const half = Math.ceil(upper.length / 2);
+            el.innerHTML =
+              '<i class="bi bi-house-heart-fill"></i> ' +
+              upper.slice(0, half) +
+              '<span>' + upper.slice(half) + '</span>';
+          });
+        }
+
+        // --- 2. Maintenance Mode ---
+        // Admin ko nahi dikhana, baaki sab ko dikhana
+        if (s.maintenanceMode && userRole !== 'admin') {
+          // Admin settings page pe nahi dikhana
+          const isAdminPage = window.location.pathname.includes('admin-');
+          if (!isAdminPage) {
+            document.body.innerHTML = \`
+              <div style="
+                display:flex;flex-direction:column;align-items:center;justify-content:center;
+                height:100vh;background:#0f0f0f;color:#fff;text-align:center;padding:2rem;
+              ">
+                <i class="bi bi-tools" style="font-size:3rem;color:#ff6b00;margin-bottom:1rem;"></i>
+                <h2 style="font-weight:700;">Site Under Maintenance</h2>
+                <p style="color:#888;max-width:400px;margin-top:0.5rem;">
+                  We're making some improvements. Please check back shortly.
+                </p>
+              </div>
+            \`;
+            // Bootstrap icons load karo maintenance page ke liye
+            const iconLink = document.createElement('link');
+            iconLink.rel = 'stylesheet';
+            iconLink.href = 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css';
+            document.head.appendChild(iconLink);
+            return; // Aage kuch mat karo
+          }
+        }
+
+        // --- 3. Allow New Registrations ---
+        // register.html pe signup form hide karo agar band hai
+        if (s.allowRegistrations === false) {
+          const registerForm = document.getElementById('registerForm');
+          const signupSection = document.getElementById('signupSection');
+          const target = registerForm || signupSection;
+          if (target) {
+            target.innerHTML = \`
+              <div class="text-center py-4">
+                <i class="bi bi-person-x" style="font-size:2.5rem;color:#ef4444;"></i>
+                <h5 class="mt-3">Registrations Closed</h5>
+                <p class="text-muted" style="font-size:0.9rem;">New account creation is temporarily disabled.</p>
+                <a href="login.html" class="btn btn-accent btn-sm-custom mt-2">Go to Login</a>
+              </div>
+            \`;
+          }
+        }
+
+        // --- 4. Allow New Listings ---
+        // Add listing button aur form hide karo agar band hai
+        if (s.allowNewListings === false) {
+          // Navbar ya dashboard mein "Add Listing" buttons
+          document.querySelectorAll(
+            'a[href="add-listing.html"], button[onclick*="add-listing"]'
+          ).forEach(btn => {
+            btn.style.display = 'none';
+          });
+
+          // Agar user add-listing.html pe hi hai toh form disable karo
+          if (window.location.pathname.includes('add-listing')) {
+            const form = document.getElementById('addListingForm') || document.querySelector('form');
+            if (form) {
+              form.innerHTML = \`
+                <div class="text-center py-5">
+                  <i class="bi bi-building-slash" style="font-size:2.5rem;color:#eab308;"></i>
+                  <h5 class="mt-3">Listing Submissions Paused</h5>
+                  <p class="text-muted" style="font-size:0.9rem;">
+                    New property listings are temporarily not being accepted.
+                  </p>
+                </div>
+              \`;
+            }
+          }
+        }
+
+        // --- 5. Platform Tagline ---
+        if (s.platformTagline) {
+          const taglineEl = document.getElementById('platformTagline')
+            || document.querySelector('.hero-tagline')
+            || document.querySelector('.hero-subtitle');
+          if (taglineEl) taglineEl.textContent = s.platformTagline;
+        }
+
+        // --- 6. Reviews disable ---
+        if (s.enableReviews === false) {
+          const reviewSection = document.getElementById('reviewsSection')
+            || document.querySelector('.reviews-section');
+          if (reviewSection) reviewSection.style.display = 'none';
+
+          const writeReviewBtn = document.getElementById('writeReviewBtn')
+            || document.querySelector('[data-action="write-review"]');
+          if (writeReviewBtn) writeReviewBtn.style.display = 'none';
+        }
+
+      } catch(e) {
+        // Settings load fail — silently ignore, defaults apply rehenge
+        console.warn('Nestify: Could not load platform settings.', e.message);
+      }
+    }
+
+    // =============================================
+    // AUTH STATE
+    // =============================================
     onAuthStateChanged(auth, async (user) => {
-      // Find nav auth section — could be #navAuth or .nav-auth-section
       const navAuth = document.getElementById('navAuth') || document.querySelector('.nav-auth-section');
-      if (!navAuth) return;
+
+      let role = 'guest';
 
       if (user) {
-        // Logged in — get role from Firestore
-        let role = 'user';
         try {
           const snap = await getDoc(doc(db, "users", user.uid));
           if (snap.exists()) role = snap.data().role || 'user';
         } catch(e) {}
+
+        // Settings apply karo role ke saath
+        await applyPlatformSettings(role);
+
+        if (!navAuth) return;
 
         const dashboardLink = role === 'admin'
           ? 'admin-dashboard.html'
@@ -79,16 +208,16 @@
           </div>
         \`;
 
-        // Logout handler
         document.getElementById('navLogoutBtn').addEventListener('click', (e) => {
           e.preventDefault();
-          signOut(auth).then(() => {
-            window.location.href = 'login.html';
-          });
+          signOut(auth).then(() => { window.location.href = 'login.html'; });
         });
 
       } else {
-        // Not logged in — show Login button
+        // Guest user — settings apply karo bina role ke
+        await applyPlatformSettings('guest');
+
+        if (!navAuth) return;
         navAuth.innerHTML = \`
           <a href="login.html" class="btn btn-accent btn-sm-custom">
             <i class="bi bi-box-arrow-in-right"></i> Login
@@ -128,10 +257,6 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     });
   });
-
-  // NOTE: Amenity toggles, image upload, and form submit
-  // are handled in each page's own module script (add-listing.html, edit-listing.html)
-  // to avoid conflicts with Firebase module code.
 
   // ---- Toast Notification System ----
   function showToast(message, type = 'success') {
