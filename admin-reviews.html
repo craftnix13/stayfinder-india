@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Reviews — Nestify</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-nestify" id="mainNavbar">
+    <div class="container-fluid px-3">
+      <a class="navbar-brand navbar-brand-nestify" href="index.html">
+        <i class="bi bi-house-heart-fill"></i> NEST<span>IFY</span>
+      </a>
+      <span class="badge bg-danger ms-2" style="font-size:0.7rem;">ADMIN</span>
+      <div class="ms-auto nav-auth-section"></div>
+    </div>
+  </nav>
+
+  <div class="dashboard-layout">
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3 p-0">
+          <div class="dashboard-sidebar">
+            <nav class="dashboard-sidebar-nav">
+              <a href="admin-dashboard.html" class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+              <a href="manage-listings.html" class="sidebar-link"><i class="bi bi-building"></i> Manage Listings</a>
+              <a href="manage-users.html" class="sidebar-link"><i class="bi bi-people"></i> Manage Users</a>
+              <a href="admin-reviews.html" class="sidebar-link active"><i class="bi bi-star"></i> Reviews</a>
+              <a href="admin-analytics.html" class="sidebar-link"><i class="bi bi-bar-chart"></i> Analytics</a>
+              <a href="admin-settings.html" class="sidebar-link"><i class="bi bi-gear"></i> Settings</a>
+            </nav>
+          </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+          <div class="dashboard-content">
+            <div class="mb-4 d-flex justify-content-between align-items-start flex-wrap gap-2">
+              <div>
+                <h3 class="fw-700 mb-1">Reviews Management</h3>
+                <p class="text-muted-custom fs-sm">Monitor and moderate all user reviews</p>
+              </div>
+              <div class="d-flex gap-2 flex-wrap">
+                <select id="filterRating" class="form-select form-select-sm" style="width:auto;background:var(--surface2);color:var(--text-primary);border-color:var(--border);">
+                  <option value="">All Ratings</option>
+                  <option value="5">★★★★★ 5 Star</option>
+                  <option value="4">★★★★ 4 Star</option>
+                  <option value="3">★★★ 3 Star</option>
+                  <option value="2">★★ 2 Star</option>
+                  <option value="1">★ 1 Star</option>
+                </select>
+                <select id="filterStatus" class="form-select form-select-sm" style="width:auto;background:var(--surface2);color:var(--text-primary);border-color:var(--border);">
+                  <option value="">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="hidden">Hidden</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="row g-3 mb-4">
+              <div class="col-md-3 col-6">
+                <div class="stat-card">
+                  <div class="stat-icon orange"><i class="bi bi-star-fill"></i></div>
+                  <div class="stat-info"><h3 id="statTotalReviews">—</h3><p>Total Reviews</p></div>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="stat-card">
+                  <div class="stat-icon green"><i class="bi bi-emoji-smile"></i></div>
+                  <div class="stat-info"><h3 id="statAvgRating">—</h3><p>Avg Rating</p></div>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="stat-card">
+                  <div class="stat-icon blue"><i class="bi bi-chat-dots"></i></div>
+                  <div class="stat-info"><h3 id="statWithReplies">—</h3><p>With Replies</p></div>
+                </div>
+              </div>
+              <div class="col-md-3 col-6">
+                <div class="stat-card">
+                  <div class="stat-icon red"><i class="bi bi-eye-slash"></i></div>
+                  <div class="stat-info"><h3 id="statHidden">—</h3><p>Hidden</p></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rating Breakdown -->
+            <div class="detail-content-card mb-4">
+              <h5 class="form-card-title mb-3"><i class="bi bi-bar-chart-fill text-accent"></i> Rating Breakdown</h5>
+              <div id="ratingBreakdown">
+                <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-accent"></div></div>
+              </div>
+            </div>
+
+            <!-- Reviews List -->
+            <div class="detail-content-card">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="form-card-title mb-0"><i class="bi bi-chat-square-text"></i> All Reviews</h5>
+                <span id="reviewCount" class="text-muted-custom fs-sm"></span>
+              </div>
+              <div id="reviewsLoading" class="text-center py-5">
+                <div class="spinner-border text-accent"></div>
+                <p class="text-muted-custom mt-2 fs-sm">Loading reviews...</p>
+              </div>
+              <div id="reviewsList"></div>
+              <div id="reviewsEmpty" style="display:none;" class="text-center py-5">
+                <i class="bi bi-star" style="font-size:3rem;color:var(--text-muted);"></i>
+                <p class="text-muted-custom mt-2">No reviews found</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reply Modal -->
+  <div class="modal fade" id="replyModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-primary);">
+        <div class="modal-header" style="border-bottom:1px solid var(--border);">
+          <h5 class="modal-title">Admin Reply to Review</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="replyOriginal" class="p-3 mb-3" style="background:var(--surface3,var(--surface));border-radius:8px;font-style:italic;font-size:0.9rem;color:var(--text-muted);"></div>
+          <textarea id="replyText" class="form-control" rows="4" placeholder="Write admin reply..."
+            style="background:var(--surface);color:var(--text-primary);border-color:var(--border);resize:none;"></textarea>
+        </div>
+        <div class="modal-footer" style="border-top:1px solid var(--border);">
+          <button class="btn btn-dark-custom btn-sm-custom" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-accent btn-sm-custom" id="submitReplyBtn">Send Reply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCB3n4oRMttZP3hEstN1WhQIUSfnMcNK3o",
+      authDomain: "stayfinder-india.firebaseapp.com",
+      projectId: "stayfinder-india",
+      storageBucket: "stayfinder-india.firebasestorage.app",
+      messagingSenderId: "645510509071",
+      appId: "1:645510509071:web:d9924d4780d3f185a5e97a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let allReviews = [];
+    let currentReplyId = null;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = 'login.html'; return; }
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (!snap.exists() || snap.data().role !== 'admin') {
+        window.location.href = 'index.html'; return;
+      }
+      loadReviews();
+    });
+
+    async function loadReviews() {
+      try {
+        const snap = await getDocs(query(collection(db, "reviews"), orderBy("createdAt", "desc")));
+        allReviews = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        // Fetch listing titles
+        const listingIds = [...new Set(allReviews.map(r => r.listingId).filter(Boolean))];
+        const listingMap = {};
+        await Promise.all(listingIds.map(async id => {
+          try {
+            const ls = await getDoc(doc(db, "listings", id));
+            if (ls.exists()) listingMap[id] = ls.data().title || 'Unknown Property';
+          } catch {}
+        }));
+        allReviews = allReviews.map(r => ({ ...r, listingTitle: listingMap[r.listingId] || 'Unknown Property' }));
+
+        updateStats();
+        renderBreakdown();
+        renderReviews();
+
+        document.getElementById('reviewsLoading').style.display = 'none';
+      } catch(err) {
+        document.getElementById('reviewsLoading').style.display = 'none';
+        if (window.showToast) window.showToast('Error loading reviews: ' + err.message, 'error');
+      }
+    }
+
+    function updateStats() {
+      const total = allReviews.length;
+      const avg = total ? (allReviews.reduce((s, r) => s + (r.rating || 0), 0) / total).toFixed(1) : '—';
+      const withReplies = allReviews.filter(r => r.adminReply || r.ownerReply).length;
+      const hidden = allReviews.filter(r => r.status === 'hidden').length;
+
+      document.getElementById('statTotalReviews').textContent = total;
+      document.getElementById('statAvgRating').textContent = avg;
+      document.getElementById('statWithReplies').textContent = withReplies;
+      document.getElementById('statHidden').textContent = hidden;
+    }
+
+    function renderBreakdown() {
+      const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+      allReviews.forEach(r => { if (r.rating >= 1 && r.rating <= 5) counts[r.rating]++; });
+      const total = allReviews.length || 1;
+      const colors = { 5: '#22c55e', 4: '#84cc16', 3: '#eab308', 2: '#f97316', 1: '#ef4444' };
+
+      document.getElementById('ratingBreakdown').innerHTML = [5, 4, 3, 2, 1].map(star => `
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span style="width:60px;font-size:0.85rem;color:var(--text-muted);">${star} ★</span>
+          <div style="flex:1;background:var(--surface);border-radius:4px;height:10px;overflow:hidden;">
+            <div style="width:${(counts[star]/total)*100}%;height:100%;background:${colors[star]};border-radius:4px;transition:width 0.5s;"></div>
+          </div>
+          <span style="width:30px;font-size:0.85rem;color:var(--text-muted);text-align:right;">${counts[star]}</span>
+        </div>`).join('');
+    }
+
+    function renderReviews() {
+      const ratingFilter = document.getElementById('filterRating').value;
+      const statusFilter = document.getElementById('filterStatus').value;
+
+      let filtered = allReviews.filter(r => {
+        if (ratingFilter && String(r.rating) !== ratingFilter) return false;
+        if (statusFilter === 'hidden' && r.status !== 'hidden') return false;
+        if (statusFilter === 'active' && r.status === 'hidden') return false;
+        return true;
+      });
+
+      document.getElementById('reviewCount').textContent = `${filtered.length} review${filtered.length !== 1 ? 's' : ''}`;
+
+      if (filtered.length === 0) {
+        document.getElementById('reviewsList').innerHTML = '';
+        document.getElementById('reviewsEmpty').style.display = 'block';
+        return;
+      }
+      document.getElementById('reviewsEmpty').style.display = 'none';
+
+      document.getElementById('reviewsList').innerHTML = filtered.map(r => {
+        const stars = '★'.repeat(r.rating || 0) + '☆'.repeat(5 - (r.rating || 0));
+        const starColor = (r.rating || 0) >= 4 ? '#22c55e' : (r.rating || 0) >= 3 ? '#eab308' : '#ef4444';
+        const timeAgo = getTimeAgo(r.createdAt?.toDate?.());
+        const isHidden = r.status === 'hidden';
+        const avatar = r.reviewerPhoto || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.reviewerName||'U')}&background=ff6b00&color=fff&size=40`;
+
+        return `
+        <div class="review-admin-card ${isHidden ? 'opacity-50' : ''}" id="rev-${r.id}"
+          style="border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin-bottom:1rem;background:var(--surface);">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+            <div class="d-flex gap-2 align-items-center">
+              <img src="${esc(avatar)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" alt=""
+                onerror="this.src='https://ui-avatars.com/api/?name=U&background=ff6b00&color=fff&size=40'">
+              <div>
+                <h6 class="mb-0">${esc(r.reviewerName || 'Anonymous')}</h6>
+                <small class="text-muted-custom">${timeAgo} · <a href="detail.html?id=${r.listingId}" class="text-accent" style="text-decoration:none;">${esc(r.listingTitle)}</a></small>
+              </div>
+            </div>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+              <span style="color:${starColor};font-size:1rem;letter-spacing:2px;">${stars}</span>
+              ${isHidden ? '<span class="badge bg-secondary">Hidden</span>' : '<span class="badge bg-success">Active</span>'}
+              <button class="btn btn-sm btn-dark-custom toggle-btn" data-id="${r.id}" data-hidden="${isHidden}"
+                style="font-size:0.75rem;padding:0.2rem 0.6rem;">
+                <i class="bi bi-${isHidden ? 'eye' : 'eye-slash'}"></i> ${isHidden ? 'Show' : 'Hide'}
+              </button>
+              <button class="btn btn-sm reply-btn" data-id="${r.id}" data-text="${esc(r.comment||'')}"
+                style="font-size:0.75rem;padding:0.2rem 0.6rem;background:transparent;border:1px solid var(--accent);color:var(--accent);">
+                <i class="bi bi-reply"></i> Reply
+              </button>
+              <button class="btn btn-sm delete-btn" data-id="${r.id}"
+                style="font-size:0.75rem;padding:0.2rem 0.6rem;background:transparent;border:1px solid var(--danger,#ef4444);color:var(--danger,#ef4444);">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+          ${r.comment ? `<p style="margin:0.5rem 0;color:var(--text-secondary);font-size:0.9rem;">${esc(r.comment)}</p>` : ''}
+          ${r.adminReply ? `
+            <div style="border-left:3px solid var(--accent);padding:0.5rem 0.75rem;margin-top:0.75rem;background:var(--surface2);border-radius:0 6px 6px 0;">
+              <small class="text-accent fw-600"><i class="bi bi-shield-check"></i> Admin Reply</small>
+              <p style="margin:0.25rem 0 0;font-size:0.85rem;color:var(--text-secondary);">${esc(r.adminReply)}</p>
+            </div>` : ''}
+          ${r.ownerReply && !r.adminReply ? `
+            <div style="border-left:3px solid #64748b;padding:0.5rem 0.75rem;margin-top:0.75rem;background:var(--surface2);border-radius:0 6px 6px 0;">
+              <small style="color:#64748b;" class="fw-600"><i class="bi bi-person-check"></i> Owner Reply</small>
+              <p style="margin:0.25rem 0 0;font-size:0.85rem;color:var(--text-secondary);">${esc(r.ownerReply)}</p>
+            </div>` : ''}
+        </div>`;
+      }).join('');
+
+      // Bind toggle buttons
+      document.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => toggleReview(btn.dataset.id, btn.dataset.hidden === 'true'));
+      });
+      // Bind reply buttons
+      document.querySelectorAll('.reply-btn').forEach(btn => {
+        btn.addEventListener('click', () => openReplyModal(btn.dataset.id, btn.dataset.text));
+      });
+      // Bind delete buttons
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => deleteReview(btn.dataset.id));
+      });
+    }
+
+    async function toggleReview(id, isHidden) {
+      try {
+        await updateDoc(doc(db, "reviews", id), { status: isHidden ? 'active' : 'hidden' });
+        const r = allReviews.find(r => r.id === id);
+        if (r) r.status = isHidden ? 'active' : 'hidden';
+        updateStats();
+        renderReviews();
+        if (window.showToast) window.showToast(`Review ${isHidden ? 'shown' : 'hidden'} successfully`, 'success');
+      } catch(err) {
+        if (window.showToast) window.showToast('Failed: ' + err.message, 'error');
+      }
+    }
+
+    async function deleteReview(id) {
+      if (!confirm('Delete this review permanently? This cannot be undone.')) return;
+      try {
+        await deleteDoc(doc(db, "reviews", id));
+        allReviews = allReviews.filter(r => r.id !== id);
+        updateStats();
+        renderBreakdown();
+        renderReviews();
+        if (window.showToast) window.showToast('Review deleted', 'success');
+      } catch(err) {
+        if (window.showToast) window.showToast('Failed: ' + err.message, 'error');
+      }
+    }
+
+    function openReplyModal(id, text) {
+      currentReplyId = id;
+      document.getElementById('replyOriginal').textContent = text || '(No comment)';
+      document.getElementById('replyText').value = '';
+      const r = allReviews.find(r => r.id === id);
+      if (r?.adminReply) document.getElementById('replyText').value = r.adminReply;
+      new bootstrap.Modal(document.getElementById('replyModal')).show();
+    }
+
+    document.getElementById('submitReplyBtn').addEventListener('click', async () => {
+      const text = document.getElementById('replyText').value.trim();
+      if (!text) return;
+      try {
+        await updateDoc(doc(db, "reviews", currentReplyId), { adminReply: text });
+        const r = allReviews.find(r => r.id === currentReplyId);
+        if (r) r.adminReply = text;
+        bootstrap.Modal.getInstance(document.getElementById('replyModal')).hide();
+        renderReviews();
+        if (window.showToast) window.showToast('Reply saved!', 'success');
+      } catch(err) {
+        if (window.showToast) window.showToast('Failed: ' + err.message, 'error');
+      }
+    });
+
+    document.getElementById('filterRating').addEventListener('change', renderReviews);
+    document.getElementById('filterStatus').addEventListener('change', renderReviews);
+
+    function getTimeAgo(date) {
+      if (!date) return '—';
+      const diff = Date.now() - date.getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs}h ago`;
+      const days = Math.floor(hrs / 24);
+      return `${days}d ago`;
+    }
+
+    function esc(t) {
+      if (!t) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>
