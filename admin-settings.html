@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Settings — Nestify</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .settings-section {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .settings-section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .settings-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid var(--border);
+      gap: 1rem;
+    }
+    .settings-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .settings-row-label { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
+    .settings-row-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+    .form-control-dark {
+      background: var(--surface) !important;
+      color: var(--text-primary) !important;
+      border-color: var(--border) !important;
+    }
+    .form-control-dark:focus {
+      box-shadow: 0 0 0 2px rgba(255,107,0,0.25) !important;
+      border-color: var(--accent) !important;
+    }
+    .toggle-switch {
+      position: relative; width: 46px; height: 24px; flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      transition: 0.3s;
+    }
+    .toggle-slider:before {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      left: 3px; bottom: 3px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      transition: 0.3s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--accent); border-color: var(--accent); }
+    .toggle-switch input:checked + .toggle-slider:before { transform: translateX(22px); background: #fff; }
+    .admin-badge-card {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+    .danger-zone {
+      border-color: rgba(239,68,68,0.3) !important;
+    }
+    .danger-zone .settings-section-title {
+      color: #ef4444;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-nestify" id="mainNavbar">
+    <div class="container-fluid px-3">
+      <a class="navbar-brand navbar-brand-nestify" href="index.html">
+        <i class="bi bi-house-heart-fill"></i> NEST<span>IFY</span>
+      </a>
+      <span class="badge bg-danger ms-2" style="font-size:0.7rem;">ADMIN</span>
+      <div class="ms-auto nav-auth-section"></div>
+    </div>
+  </nav>
+
+  <div class="dashboard-layout">
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3 p-0">
+          <div class="dashboard-sidebar">
+            <nav class="dashboard-sidebar-nav">
+              <a href="admin-dashboard.html" class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+              <a href="manage-listings.html" class="sidebar-link"><i class="bi bi-building"></i> Manage Listings</a>
+              <a href="manage-users.html" class="sidebar-link"><i class="bi bi-people"></i> Manage Users</a>
+              <a href="admin-reviews.html" class="sidebar-link"><i class="bi bi-star"></i> Reviews</a>
+              <a href="admin-analytics.html" class="sidebar-link"><i class="bi bi-bar-chart"></i> Analytics</a>
+              <a href="admin-settings.html" class="sidebar-link active"><i class="bi bi-gear"></i> Settings</a>
+            </nav>
+          </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+          <div class="dashboard-content">
+            <div class="mb-4">
+              <h3 class="fw-700 mb-1">Platform Settings</h3>
+              <p class="text-muted-custom fs-sm">Configure platform behaviour, moderation, and admin preferences</p>
+            </div>
+
+            <div class="row g-4">
+              <div class="col-lg-8">
+
+                <!-- Platform Info -->
+                <div class="settings-section">
+                  <div class="settings-section-title"><i class="bi bi-globe text-accent"></i> Platform Info</div>
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label fs-sm fw-600">Platform Name</label>
+                      <input type="text" id="platformName" class="form-control form-control-dark" value="Nestify">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fs-sm fw-600">Support Email</label>
+                      <input type="email" id="supportEmail" class="form-control form-control-dark" placeholder="support@nestify.in">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fs-sm fw-600">Support WhatsApp</label>
+                      <input type="text" id="supportWhatsapp" class="form-control form-control-dark" placeholder="+91 9876543210">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label fs-sm fw-600">Default City</label>
+                      <input type="text" id="defaultCity" class="form-control form-control-dark" placeholder="Mumbai">
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label fs-sm fw-600">Platform Tagline</label>
+                      <input type="text" id="platformTagline" class="form-control form-control-dark" placeholder="Find your perfect stay">
+                    </div>
+                  </div>
+                  <button class="btn btn-accent btn-sm-custom mt-3" id="savePlatformBtn">
+                    <i class="bi bi-check-lg"></i> Save Changes
+                  </button>
+                </div>
+
+                <!-- Listing Settings -->
+                <div class="settings-section">
+                  <div class="settings-section-title"><i class="bi bi-building text-accent"></i> Listing Settings</div>
+
+                  <div class="settings-row">
+                    <div>
+                      <div class="settings-row-label">Auto-approve Listings</div>
+                      <div class="settings-row-desc">New listings go live without manual review</div>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="autoApprove">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="settings-row">
+                    <div>
+                      <div class="settings-row-label">Allow New Listings</div>
+                      <div class="settings-row-desc">Clients can submit new property listings</div>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="allowNewListings" checked>
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="settings-row">
+                    <div>
+                      <div class="settings-row-label">Max Images per Listing</div>
+                      <div class="settings-row-desc">Maximum photos a client can upload</div>
+                    </div>
+                    <select id="maxImages" class="form-select form-select-sm" style="width:90px;background:var(--surface);color:var(--text-primary);border-color:var(--border);">
+                      <option>5</option>
+                      <option selected>10</option>
+                      <option>15</option>
+                      <option>20</option>
+                    </select>
+                  </div>
+
+                  <div class="settings-row">
+                    <div>
+                      <div class="settings-row-label">Require Map Pin</div>
+                      <div class="settings-row-desc">Listings must have a location pin to be submitted</div>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="requireMapPin">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="settings-row">
+                    <div>
+                      <div class="settings-row-label">Featured Listings Limit</div>
+                      <div class="settings-row-desc">Max listings shown in Featured section</div>
+                    </div>
+                    <select id="featuredLimit" class="form-select form-select-sm" style="width:90px;background:var(--surface);color:var(--text-primary);border-color:var(--border);">
+                      <option>4</option>
+                      <option selected>6</option>
+                      <option>8</option>
+                      <option>12</option>
+                    </select>
+                  </div>
+
+                  <button class="btn btn-accent btn-sm-custom mt-3" id="saveListingBtn">
+                    <i class="bi bi-check-lg"></i> Save Settings
+                  </button>
+                </div>
+
+                <!-- User Settings -->
+                <div class="settings-section">
+                  <div class="settings-section-title"><i class="bi bi-people text-accent"></i> User & Registration</div>
+
+                  <div class="settings-row">
+                    <div>
+                      <div class="settings-row-label">Allow New Registrations</div>
+                      <div class="settings-row-desc">New users can create accounts</div>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="allowRegistrations" checked>
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="settings-row">
+                    <div>
+                      <div class="settings-row-label">Allow Client Self-Upgrade</div>
+                      <div class="settings-row-desc">Users can upgrade themselves to client role</div>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="allowSelfUpgrade" checked>
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="settings-row">
+                    <div>
+                      <div class="settings-row-label">Email Verification Required</div>
+                      <div class="settings-row-desc">Users must verify email before listing</div>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="emailVerification">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <button class="btn btn-accent btn-sm-custom mt-3" id="saveUserBtn">
+                    <i class="bi bi-check-lg"></i> Save Settings
+                  </button>
+                </div>
+
+                <!-- Reviews Settings -->
+                <div class="settings-section">
+                  <div class="settings-section-title"><i class="bi bi-star text-accent"></i> Reviews & Moderation</div>
+
+                  <div class="settings-row">
+                    <div>
+                      <div class="settings-row-label">Enable Reviews</div>
+                      <div class="settings-row-desc">Users can leave reviews on listings</div>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="enableReviews" checked>
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="settings-row">
+                    <div>
+                      <div class="settings-row-label">Auto-hide Low Ratings</div>
+                      <div class="settings-row-desc">Hide 1-star reviews pending manual review</div>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="autoHideLow">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="settings-row">
+                    <div>
+                      <div class="settings-row-label">Owner Can Reply</div>
+                      <div class="settings-row-desc">Property owners can reply to reviews</div>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="ownerReply" checked>
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <button class="btn btn-accent btn-sm-custom mt-3" id="saveReviewBtn">
+                    <i class="bi bi-check-lg"></i> Save Settings
+                  </button>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="settings-section danger-zone">
+                  <div class="settings-section-title"><i class="bi bi-exclamation-triangle-fill"></i> Danger Zone</div>
+
+                  <div class="settings-row">
+                    <div>
+                      <div class="settings-row-label">Maintenance Mode</div>
+                      <div class="settings-row-desc">Show maintenance page to all non-admin users</div>
+                    </div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" id="maintenanceMode">
+                      <span class="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <div class="mt-3 d-flex flex-wrap gap-2">
+                    <button class="btn btn-sm-custom" id="clearPendingBtn"
+                      style="background:transparent;border:1px solid #eab308;color:#eab308;padding:0.4rem 1rem;border-radius:6px;font-size:0.85rem;">
+                      <i class="bi bi-trash"></i> Clear All Rejected Listings
+                    </button>
+                    <button class="btn btn-sm-custom" id="exportDataBtn"
+                      style="background:transparent;border:1px solid var(--accent);color:var(--accent);padding:0.4rem 1rem;border-radius:6px;font-size:0.85rem;">
+                      <i class="bi bi-download"></i> Export Platform Data (JSON)
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Right column -->
+              <div class="col-lg-4">
+
+                <!-- Admin Profile -->
+                <div class="settings-section">
+                  <div class="settings-section-title"><i class="bi bi-person-badge text-accent"></i> Admin Profile</div>
+                  <div class="text-center mb-3">
+                    <div id="adminAvatar" style="width:72px;height:72px;border-radius:50%;margin:0 auto 0.75rem;overflow:hidden;border:2px solid var(--accent);background:var(--surface);">
+                      <img id="adminAvatarImg" src="" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+                    </div>
+                    <h6 id="adminName" class="mb-0">—</h6>
+                    <small id="adminEmail" class="text-muted-custom">—</small>
+                    <div class="mt-1"><span class="badge bg-danger" style="font-size:0.7rem;">ADMIN</span></div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fs-sm fw-600">Display Name</label>
+                    <input type="text" id="adminDisplayName" class="form-control form-control-dark" placeholder="Admin Name">
+                  </div>
+                  <button class="btn btn-accent btn-sm-custom w-100" id="saveAdminProfileBtn">
+                    <i class="bi bi-check-lg"></i> Update Profile
+                  </button>
+                </div>
+
+                <!-- Platform Stats Summary -->
+                <div class="settings-section">
+                  <div class="settings-section-title"><i class="bi bi-info-circle text-accent"></i> Quick Stats</div>
+                  <div id="quickStats">
+                    <div class="text-center py-2"><div class="spinner-border spinner-border-sm text-accent"></div></div>
+                  </div>
+                </div>
+
+                <!-- Firebase Project Info -->
+                <div class="settings-section">
+                  <div class="settings-section-title"><i class="bi bi-database text-accent"></i> Firebase Project</div>
+                  <div style="font-size:0.82rem;color:var(--text-muted);">
+                    <div class="d-flex justify-content-between py-1" style="border-bottom:1px solid var(--border);">
+                      <span>Project ID</span>
+                      <span class="text-accent">stayfinder-india</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-1" style="border-bottom:1px solid var(--border);">
+                      <span>Auth Domain</span>
+                      <span style="color:var(--text-secondary);font-size:0.75rem;">stayfinder-india.firebaseapp.com</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-1">
+                      <span>SDK Version</span>
+                      <span style="color:var(--text-secondary);">11.7.3</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Activity Log -->
+                <div class="settings-section">
+                  <div class="settings-section-title"><i class="bi bi-clock-history text-accent"></i> Recent Admin Actions</div>
+                  <div id="activityLog" style="font-size:0.82rem;">
+                    <div class="text-center py-2 text-muted-custom">No logged actions yet</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCB3n4oRMttZP3hEstN1WhQIUSfnMcNK3o",
+      authDomain: "stayfinder-india.firebaseapp.com",
+      projectId: "stayfinder-india",
+      storageBucket: "stayfinder-india.firebasestorage.app",
+      messagingSenderId: "645510509071",
+      appId: "1:645510509071:web:d9924d4780d3f185a5e97a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    const SETTINGS_DOC = 'platform_settings';
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = 'login.html'; return; }
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (!snap.exists() || snap.data().role !== 'admin') {
+        window.location.href = 'index.html'; return;
+      }
+      currentUser = user;
+      loadAdminProfile(snap.data(), user);
+      loadSettings();
+      loadQuickStats();
+    });
+
+    function loadAdminProfile(userData, user) {
+      const name = userData.name || user.displayName || 'Admin';
+      const email = userData.email || user.email || '';
+      const photo = userData.photoURL || user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=ff6b00&color=fff&size=72`;
+
+      document.getElementById('adminName').textContent = name;
+      document.getElementById('adminEmail').textContent = email;
+      document.getElementById('adminDisplayName').value = name;
+      const img = document.getElementById('adminAvatarImg');
+      img.src = photo;
+      img.style.display = 'block';
+    }
+
+    async function loadSettings() {
+      try {
+        const snap = await getDoc(doc(db, "settings", SETTINGS_DOC));
+        if (snap.exists()) {
+          const s = snap.data();
+          if (s.platformName) document.getElementById('platformName').value = s.platformName;
+          if (s.supportEmail) document.getElementById('supportEmail').value = s.supportEmail;
+          if (s.supportWhatsapp) document.getElementById('supportWhatsapp').value = s.supportWhatsapp;
+          if (s.defaultCity) document.getElementById('defaultCity').value = s.defaultCity;
+          if (s.platformTagline) document.getElementById('platformTagline').value = s.platformTagline;
+          setToggle('autoApprove', s.autoApprove);
+          setToggle('allowNewListings', s.allowNewListings !== false);
+          setToggle('requireMapPin', s.requireMapPin);
+          setToggle('allowRegistrations', s.allowRegistrations !== false);
+          setToggle('allowSelfUpgrade', s.allowSelfUpgrade !== false);
+          setToggle('emailVerification', s.emailVerification);
+          setToggle('enableReviews', s.enableReviews !== false);
+          setToggle('autoHideLow', s.autoHideLow);
+          setToggle('ownerReply', s.ownerReply !== false);
+          setToggle('maintenanceMode', s.maintenanceMode);
+          if (s.maxImages) document.getElementById('maxImages').value = s.maxImages;
+          if (s.featuredLimit) document.getElementById('featuredLimit').value = s.featuredLimit;
+        }
+      } catch(e) { /* No settings doc yet, defaults apply */ }
+    }
+
+    function setToggle(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.checked = !!val;
+    }
+
+    function getSettings() {
+      return {
+        platformName: document.getElementById('platformName').value.trim(),
+        supportEmail: document.getElementById('supportEmail').value.trim(),
+        supportWhatsapp: document.getElementById('supportWhatsapp').value.trim(),
+        defaultCity: document.getElementById('defaultCity').value.trim(),
+        platformTagline: document.getElementById('platformTagline').value.trim(),
+        autoApprove: document.getElementById('autoApprove').checked,
+        allowNewListings: document.getElementById('allowNewListings').checked,
+        requireMapPin: document.getElementById('requireMapPin').checked,
+        maxImages: document.getElementById('maxImages').value,
+        featuredLimit: document.getElementById('featuredLimit').value,
+        allowRegistrations: document.getElementById('allowRegistrations').checked,
+        allowSelfUpgrade: document.getElementById('allowSelfUpgrade').checked,
+        emailVerification: document.getElementById('emailVerification').checked,
+        enableReviews: document.getElementById('enableReviews').checked,
+        autoHideLow: document.getElementById('autoHideLow').checked,
+        ownerReply: document.getElementById('ownerReply').checked,
+        maintenanceMode: document.getElementById('maintenanceMode').checked,
+        updatedAt: new Date().toISOString(),
+        updatedBy: currentUser?.email || 'admin'
+      };
+    }
+
+    async function saveSettings(partialKeys, btnId) {
+      const btn = document.getElementById(btnId);
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Saving...';
+      try {
+        await setDoc(doc(db, "settings", SETTINGS_DOC), getSettings(), { merge: true });
+        if (window.showToast) window.showToast('Settings saved!', 'success');
+        logAction('Settings updated');
+      } catch(err) {
+        if (window.showToast) window.showToast('Failed: ' + err.message, 'error');
+      }
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check-lg"></i> Save Settings';
+    }
+
+    document.getElementById('savePlatformBtn').addEventListener('click', () => {
+      document.getElementById('savePlatformBtn').innerHTML = '<i class="bi bi-check-lg"></i> Save Changes';
+      saveSettings([], 'savePlatformBtn');
+    });
+    document.getElementById('saveListingBtn').addEventListener('click', () => saveSettings([], 'saveListingBtn'));
+    document.getElementById('saveUserBtn').addEventListener('click', () => saveSettings([], 'saveUserBtn'));
+    document.getElementById('saveReviewBtn').addEventListener('click', () => saveSettings([], 'saveReviewBtn'));
+
+    document.getElementById('saveAdminProfileBtn').addEventListener('click', async () => {
+      const name = document.getElementById('adminDisplayName').value.trim();
+      if (!name) return;
+      const btn = document.getElementById('saveAdminProfileBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+      try {
+        await updateDoc(doc(db, "users", currentUser.uid), { name });
+        await updateProfile(currentUser, { displayName: name });
+        document.getElementById('adminName').textContent = name;
+        if (window.showToast) window.showToast('Profile updated!', 'success');
+        logAction('Admin profile updated');
+      } catch(err) {
+        if (window.showToast) window.showToast('Failed: ' + err.message, 'error');
+      }
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check-lg"></i> Update Profile';
+    });
+
+    // Clear rejected listings
+    document.getElementById('clearPendingBtn').addEventListener('click', async () => {
+      if (!confirm('Delete ALL rejected listings permanently? This cannot be undone.')) return;
+      try {
+        const snap = await getDocs(query(collection(db, "listings"), where("status", "==", "rejected")));
+        const delPromises = snap.docs.map(d => deleteDoc(doc(db, "listings", d.id)));
+        await Promise.all(delPromises);
+        if (window.showToast) window.showToast(`Deleted ${snap.docs.length} rejected listings`, 'success');
+        logAction(`Deleted ${snap.docs.length} rejected listings`);
+        loadQuickStats();
+      } catch(err) {
+        if (window.showToast) window.showToast('Failed: ' + err.message, 'error');
+      }
+    });
+
+    // Export data
+    document.getElementById('exportDataBtn').addEventListener('click', async () => {
+      try {
+        const [ls, us] = await Promise.all([
+          getDocs(collection(db, "listings")),
+          getDocs(collection(db, "users"))
+        ]);
+        const data = {
+          exportedAt: new Date().toISOString(),
+          listings: ls.docs.map(d => ({ id: d.id, ...d.data() })),
+          users: us.docs.map(d => ({ id: d.id, ...d.data() }))
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `nestify-export-${Date.now()}.json`;
+        a.click();
+        if (window.showToast) window.showToast('Data exported!', 'success');
+        logAction('Platform data exported');
+      } catch(err) {
+        if (window.showToast) window.showToast('Export failed: ' + err.message, 'error');
+      }
+    });
+
+    async function loadQuickStats() {
+      try {
+        const [ls, us, rs] = await Promise.all([
+          getDocs(collection(db, "listings")),
+          getDocs(collection(db, "users")),
+          getDocs(collection(db, "reviews"))
+        ]);
+        const listings = ls.docs.map(d => d.data());
+        const approved = listings.filter(l => l.status === 'approved').length;
+        const pending = listings.filter(l => l.status === 'pending').length;
+
+        document.getElementById('quickStats').innerHTML = `
+          <div class="d-flex justify-content-between py-1" style="border-bottom:1px solid var(--border);font-size:0.82rem;">
+            <span class="text-muted-custom">Total Listings</span><span class="fw-600">${listings.length}</span>
+          </div>
+          <div class="d-flex justify-content-between py-1" style="border-bottom:1px solid var(--border);font-size:0.82rem;">
+            <span class="text-muted-custom">Approved</span><span style="color:#22c55e;font-weight:600;">${approved}</span>
+          </div>
+          <div class="d-flex justify-content-between py-1" style="border-bottom:1px solid var(--border);font-size:0.82rem;">
+            <span class="text-muted-custom">Pending Review</span><span style="color:#eab308;font-weight:600;">${pending}</span>
+          </div>
+          <div class="d-flex justify-content-between py-1" style="border-bottom:1px solid var(--border);font-size:0.82rem;">
+            <span class="text-muted-custom">Total Users</span><span class="fw-600">${us.docs.length}</span>
+          </div>
+          <div class="d-flex justify-content-between py-1" style="font-size:0.82rem;">
+            <span class="text-muted-custom">Total Reviews</span><span class="fw-600">${rs.docs.length}</span>
+          </div>`;
+      } catch {}
+    }
+
+    const activityLog = [];
+    function logAction(msg) {
+      activityLog.unshift({ msg, time: new Date().toLocaleTimeString('en-IN') });
+      const el = document.getElementById('activityLog');
+      if (el) {
+        el.innerHTML = activityLog.slice(0, 5).map(a => `
+          <div style="padding:0.4rem 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:var(--text-secondary);">${esc(a.msg)}</span>
+            <span style="color:var(--text-muted);font-size:0.75rem;">${a.time}</span>
+          </div>`).join('');
+      }
+    }
+
+    function esc(t) {
+      if (!t) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>
