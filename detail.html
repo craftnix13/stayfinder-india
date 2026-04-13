@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loading... — Nestify</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    #detailMap { height:280px; border-radius:var(--radius-md); border:1px solid var(--border-color); }
+    .detail-map-no-coords { height:280px; border-radius:var(--radius-md); background:var(--bg-input); display:flex; align-items:center; justify-content:center; color:var(--text-muted); flex-direction:column; gap:0.5rem; border:1px solid var(--border-color); }
+    .open-map-btn { display:inline-flex; align-items:center; gap:0.4rem; margin-top:0.75rem; background:var(--accent); color:#fff; border:none; border-radius:50px; padding:0.4rem 1rem; font-size:0.82rem; font-weight:600; font-family:var(--font-primary); cursor:pointer; transition:var(--transition); text-decoration:none; }
+    .open-map-btn:hover { background:var(--accent-hover); color:#fff; }
+    .detail-gallery { display:grid; grid-template-columns:2fr 1fr; grid-template-rows:240px 240px; gap:8px; border-radius:var(--radius-lg); overflow:hidden; margin-bottom:1.5rem; }
+    .detail-gallery-main { grid-row:1/3; position:relative; overflow:hidden; }
+    .detail-gallery-side { position:relative; overflow:hidden; }
+    .detail-gallery img { width:100%; height:100%; object-fit:cover; transition:transform 0.3s; cursor:pointer; }
+    .detail-gallery img:hover { transform:scale(1.03); }
+    .gallery-overlay { position:absolute; bottom:12px; right:12px; background:rgba(0,0,0,0.7); color:#fff; padding:0.4rem 0.8rem; border-radius:50px; font-size:0.8rem; font-weight:600; backdrop-filter:blur(4px); }
+    .detail-content-card { background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--radius-lg); padding:1.5rem; margin-bottom:1.25rem; }
+    .detail-title { font-size:1.6rem; font-weight:700; margin-bottom:0.5rem; }
+    .detail-location { color:var(--text-muted); font-size:0.95rem; }
+    .detail-price-big { font-size:2rem; font-weight:800; color:var(--accent); }
+    .detail-price-big span { font-size:1rem; font-weight:400; color:var(--text-muted); }
+    .detail-meta { display:flex; gap:1.5rem; flex-wrap:wrap; margin-top:0.75rem; padding-top:0.75rem; border-top:1px solid var(--border-color); }
+    .detail-meta-item { font-size:0.82rem; color:var(--text-muted); display:flex; align-items:center; gap:0.4rem; }
+    .detail-amenities-grid { display:flex; flex-wrap:wrap; gap:0.5rem; }
+    .detail-amenity-item { display:inline-flex; align-items:center; gap:0.4rem; background:var(--bg-input); color:var(--text-secondary); border:1px solid var(--border-light); border-radius:var(--radius-sm); padding:0.4rem 0.9rem; font-size:0.85rem; }
+    .detail-amenity-item i { color:var(--accent); }
+    .contact-card { background:var(--bg-card); border:1px solid var(--accent); border-radius:var(--radius-lg); padding:1.5rem; position:sticky; top:90px; }
+    .contact-card-owner { display:flex; align-items:center; gap:0.75rem; padding:0.75rem; background:var(--bg-input); border-radius:var(--radius-md); margin-bottom:1rem; }
+    .contact-card-owner img { width:48px; height:48px; border-radius:50%; border:2px solid var(--accent); object-fit:cover; }
+    .btn-whatsapp { width:100%; background:#25d366; color:#fff; border:none; border-radius:var(--radius-md); padding:0.8rem; font-weight:600; font-size:0.95rem; font-family:var(--font-primary); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.5rem; margin-bottom:0.75rem; transition:var(--transition); }
+    .btn-whatsapp:hover { background:#1da851; transform:translateY(-1px); }
+    .btn-call { width:100%; background:transparent; color:var(--accent); border:1px solid var(--accent); border-radius:var(--radius-md); padding:0.8rem; font-weight:600; font-size:0.95rem; font-family:var(--font-primary); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:0.5rem; transition:var(--transition); }
+    .btn-call:hover { background:var(--accent-subtle); }
+    @media(max-width:767px) { .detail-gallery { grid-template-columns:1fr; grid-template-rows:260px; } .detail-gallery-side { display:none; } .contact-card { position:static; } .detail-title { font-size:1.3rem; } }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-nestify" id="mainNavbar">
+    <div class="container">
+      <a class="navbar-brand navbar-brand-nestify" href="index.html"><i class="bi bi-house-heart-fill"></i> NEST<span>IFY</span></a>
+      <button class="navbar-toggler navbar-toggler-nestify" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto me-3">
+          <li class="nav-item"><a class="nav-link nav-link-nestify" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link nav-link-nestify" href="listings.html">Find PG</a></li>
+          <li class="nav-item"><a class="nav-link nav-link-nestify" href="map.html">Map View</a></li>
+          <li class="nav-item"><a class="nav-link nav-link-nestify" href="add-listing.html">List Your Space</a></li>
+        </ul>
+        <div class="nav-auth-section"></div>
+      </div>
+    </div>
+  </nav>
+
+  <section class="page-top section-padding" id="detailContent">
+    <div class="container">
+
+      <!-- Loading -->
+      <div id="detailLoading" class="text-center py-5">
+        <div class="skeleton skeleton-image mb-4" style="height:450px;border-radius:var(--radius-lg);"></div>
+        <div class="row g-4">
+          <div class="col-lg-8">
+            <div class="detail-content-card">
+              <div class="skeleton skeleton-text" style="height:24px;width:60%;margin-bottom:1rem;"></div>
+              <div class="skeleton skeleton-text" style="height:16px;width:40%;margin-bottom:1rem;"></div>
+              <div class="skeleton skeleton-text" style="height:16px;width:80%;"></div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="skeleton" style="height:300px;border-radius:var(--radius-md);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loaded content -->
+      <div id="detailLoaded" style="display:none;">
+        <nav aria-label="breadcrumb" class="mb-3">
+          <ol class="breadcrumb" style="font-size:0.85rem;">
+            <li class="breadcrumb-item"><a href="index.html" class="text-accent">Home</a></li>
+            <li class="breadcrumb-item"><a href="listings.html" class="text-accent">Listings</a></li>
+            <li class="breadcrumb-item text-muted-custom active" id="breadcrumbTitle">Loading...</li>
+          </ol>
+        </nav>
+
+        <!-- Gallery -->
+        <div class="detail-gallery" id="detailGallery"></div>
+
+        <div class="row g-4">
+          <!-- Left -->
+          <div class="col-lg-8">
+
+            <div class="detail-content-card">
+              <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                <div>
+                  <div class="d-flex gap-2 mb-2" id="detailBadges"></div>
+                  <h1 class="detail-title" id="detailTitle">Loading...</h1>
+                  <p class="detail-location" id="detailLocation"><i class="bi bi-geo-alt-fill"></i> <span>Loading...</span></p>
+                </div>
+                <div class="text-end">
+                  <div class="detail-price-big" id="detailPrice">₹0<span>/mo</span></div>
+                  <div class="d-flex gap-2 mt-2">
+                    <button class="btn-icon" id="detailWishlistBtn"><i class="bi bi-heart"></i></button>
+                    <button class="btn-icon" id="detailShareBtn"><i class="bi bi-share"></i></button>
+                  </div>
+                </div>
+              </div>
+              <div class="detail-meta" id="detailMeta"></div>
+            </div>
+
+            <div class="detail-content-card">
+              <h5 class="form-card-title"><i class="bi bi-info-circle"></i> About this Property</h5>
+              <p class="text-muted-custom" style="line-height:1.8;" id="detailDescription">Loading...</p>
+            </div>
+
+            <div class="detail-content-card">
+              <h5 class="form-card-title"><i class="bi bi-grid"></i> Amenities</h5>
+              <div class="detail-amenities-grid" id="detailAmenities"></div>
+            </div>
+
+            <!-- MAP CARD -->
+            <div class="detail-content-card">
+              <h5 class="form-card-title"><i class="bi bi-geo-alt"></i> Location</h5>
+              <p class="text-muted-custom fs-sm mb-2" id="detailAddressText"></p>
+              <div id="detailMap"></div>
+              <div id="detailMapNoCoords" class="detail-map-no-coords" style="display:none;">
+                <i class="bi bi-pin-map" style="font-size:2.5rem;opacity:0.3;"></i>
+                <p class="fs-sm">Map location not available for this listing</p>
+              </div>
+              <div id="openMapWrap" style="display:none; margin-top:0.75rem;">
+                <a id="openGoogleMaps" href="#" target="_blank" class="open-map-btn">
+                  <i class="bi bi-map"></i> Open in Google Maps
+                </a>
+                <a id="openDirections" href="#" target="_blank" class="open-map-btn" style="background:var(--bg-input);color:var(--text-secondary);border:1px solid var(--border-color); margin-left:0.5rem;">
+                  <i class="bi bi-signpost-2"></i> Get Directions
+                </a>
+              </div>
+            </div>
+
+            <div class="detail-content-card">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="form-card-title mb-0"><i class="bi bi-star"></i> Reviews</h5>
+              </div>
+              <p class="text-muted-custom fs-sm">No reviews yet. Be the first to review this property!</p>
+            </div>
+          </div>
+
+          <!-- Right sidebar -->
+          <div class="col-lg-4">
+            <div class="contact-card" id="contactCard">
+              <div class="contact-card-owner" id="ownerInfo">
+                <img src="https://ui-avatars.com/api/?name=Owner&background=ff6b00&color=fff&size=48" alt="" id="ownerAvatar">
+                <div>
+                  <h6 id="ownerName">Property Owner</h6>
+                  <p class="text-muted-custom fs-sm mb-0">Property Owner</p>
+                </div>
+              </div>
+              <div class="detail-price-big text-center mb-3" id="sidebarPrice">₹0<span>/mo</span></div>
+              <button class="btn-whatsapp" id="whatsappBtn"><i class="bi bi-whatsapp"></i> WhatsApp Owner</button>
+              <button class="btn-call" id="callBtn"><i class="bi bi-telephone-fill"></i> Call Now</button>
+              <div class="mt-3 pt-3" style="border-top:1px solid var(--border-color);" id="propertyDetails"></div>
+            </div>
+
+            <div class="detail-content-card mt-4">
+              <h6 class="form-card-title"><i class="bi bi-shield-exclamation"></i> Safety Tips</h6>
+              <ul style="padding-left:1.2rem;">
+                <li class="text-muted-custom fs-sm mb-2">Visit the property before making any payment</li>
+                <li class="text-muted-custom fs-sm mb-2">Don't transfer money without a proper agreement</li>
+                <li class="text-muted-custom fs-sm mb-2">Verify the owner's identity</li>
+                <li class="text-muted-custom fs-sm">Report suspicious listings</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div id="detailError" style="display:none;">
+        <div class="empty-state">
+          <i class="bi bi-exclamation-triangle"></i>
+          <h4>Listing Not Found</h4>
+          <p>This listing doesn't exist or has been removed.</p>
+          <a href="listings.html" class="btn btn-accent"><i class="bi bi-search"></i> Browse Listings</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer mt-5">
+    <div class="container">
+      <div class="footer-bottom" style="border:none;margin:0;padding:1rem 0;">
+        <p>© 2025 Nestify. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/app.js"></script>
+
+  <script type="module">
+    import { getListingById, incrementViewCount } from './js/firebase-config.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const listingId = new URLSearchParams(window.location.search).get('id');
+      if (!listingId) { showError(); return; }
+
+      try {
+        const listing = await getListingById(listingId);
+        if (!listing) { showError(); return; }
+        incrementViewCount(listingId);
+        renderDetail(listing);
+      } catch(err) {
+        console.error(err);
+        showError();
+      }
+    });
+
+    function renderDetail(listing) {
+      const {
+        id, title='Untitled', type='PG', price=0, location='', city='Pune',
+        images=[], amenities=[], ownerName='Property Owner', ownerPhone='',
+        category='', foodIncluded=false, ac=false, bathroom='shared',
+        verified=false, featured=false, viewsCount=0, description='',
+        createdAt, securityDeposit=0, address='', lat=null, lng=null
+      } = listing;
+
+      document.title = `${title} — Nestify`;
+      document.getElementById('breadcrumbTitle').textContent = title;
+
+      // --- Gallery ---
+      const galleryEl = document.getElementById('detailGallery');
+      const fallback = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800&h=500&fit=crop';
+      if (images.length >= 3) {
+        galleryEl.innerHTML = `
+          <div class="detail-gallery-main"><img src="${esc(images[0])}" alt="${esc(title)}" onerror="this.src='${fallback}'"></div>
+          <div class="detail-gallery-side"><img src="${esc(images[1])}" alt="${esc(title)}" onerror="this.src='${fallback}'"></div>
+          <div class="detail-gallery-side" style="position:relative;">
+            <img src="${esc(images[2])}" alt="${esc(title)}" onerror="this.src='${fallback}'">
+            ${images.length > 3 ? `<div class="gallery-overlay"><i class="bi bi-images me-2"></i>+${images.length-3} Photos</div>` : ''}
+          </div>`;
+      } else {
+        galleryEl.innerHTML = `<div class="detail-gallery-main" style="grid-row:1/3;grid-column:1/3;"><img src="${esc(images[0]||fallback)}" alt="${esc(title)}" onerror="this.src='${fallback}'"></div>`;
+      }
+
+      // --- Badges ---
+      let badges = `<span class="badge-type">${esc(type)}</span>`;
+      if (verified) badges += `<span class="badge-verified"><i class="bi bi-check-circle-fill"></i> Verified</span>`;
+      if (featured) badges += `<span class="badge-featured"><i class="bi bi-star-fill"></i> Featured</span>`;
+      if (category) badges += `<span class="status-badge approved">${esc(category.charAt(0).toUpperCase()+category.slice(1))}</span>`;
+      document.getElementById('detailBadges').innerHTML = badges;
+
+      // --- Title, location, price ---
+      document.getElementById('detailTitle').textContent = title;
+      document.getElementById('detailLocation').innerHTML = `<i class="bi bi-geo-alt-fill text-accent"></i> ${esc(address || (location+', '+city))}`;
+      const fmtPrice = '₹' + Number(price).toLocaleString('en-IN');
+      document.getElementById('detailPrice').innerHTML = `${fmtPrice}<span>/mo</span>`;
+      document.getElementById('sidebarPrice').innerHTML = `${fmtPrice}<span>/mo</span>`;
+
+      // --- Meta ---
+      const daysAgo = createdAt?.toDate ? Math.floor((Date.now()-createdAt.toDate().getTime())/(86400000)) : 0;
+      const daysText = daysAgo===0?'Today':daysAgo===1?'Yesterday':`${daysAgo} days ago`;
+      document.getElementById('detailMeta').innerHTML = `
+        <div class="detail-meta-item"><i class="bi bi-eye"></i> ${viewsCount.toLocaleString()} views</div>
+        <div class="detail-meta-item"><i class="bi bi-calendar3"></i> Listed ${daysText}</div>`;
+
+      // --- Description ---
+      document.getElementById('detailDescription').textContent = description || 'No description available.';
+
+      // --- Amenities ---
+      const amenityIcons = {
+        'WiFi':'bi-wifi','AC':'bi-snow','Meals':'bi-egg-fried','Food':'bi-egg-fried',
+        'Attached Bath':'bi-droplet','Attached Bathroom':'bi-droplet','TV':'bi-tv',
+        'Security':'bi-shield-check','CCTV':'bi-shield-check','Parking':'bi-car-front',
+        'RO Water':'bi-water','Power Backup':'bi-lightning','Housekeeping':'bi-house-door',
+        'Geyser':'bi-thermometer-half','Laundry':'bi-box','Gym':'bi-bicycle','Kitchen':'bi-cup-hot'
+      };
+      document.getElementById('detailAmenities').innerHTML = amenities.length > 0
+        ? amenities.map(a => `<div class="detail-amenity-item"><i class="bi ${amenityIcons[a]||'bi-check-circle'}"></i> ${esc(a)}</div>`).join('')
+        : '<p class="text-muted-custom fs-sm">No amenities listed</p>';
+
+      // --- MAP ---
+      document.getElementById('detailAddressText').textContent = address || `${location}, ${city}`;
+
+      if (lat && lng) {
+        // Init Leaflet map
+        document.getElementById('detailMap').style.display = 'block';
+        document.getElementById('detailMapNoCoords').style.display = 'none';
+        document.getElementById('openMapWrap').style.display = 'block';
+
+        const map = L.map('detailMap', { center:[lat,lng], zoom:15, zoomControl:true, scrollWheelZoom:false });
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:19
+        }).addTo(map);
+
+        // Property pin
+        const pinIcon = L.divIcon({
+          className:'',
+          html:`<div style="background:#ff6b00;color:#fff;font-weight:700;font-size:0.72rem;padding:5px 10px;border-radius:6px;box-shadow:0 2px 8px rgba(255,107,0,0.5);white-space:nowrap;">${esc(title)}</div>`,
+          iconAnchor:[40, 28]
+        });
+        L.marker([lat,lng], { icon:pinIcon }).addTo(map)
+          .bindPopup(`<div style="color:#fff;font-size:0.82rem;"><b>${esc(title)}</b><br>${esc(location)}, ${esc(city)}<br><span style="color:#ff6b00;font-weight:700;">${fmtPrice}/mo</span></div>`)
+          .openPopup();
+
+        // Google Maps links
+        document.getElementById('openGoogleMaps').href = `https://www.google.com/maps?q=${lat},${lng}`;
+        document.getElementById('openDirections').href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+
+      } else {
+        document.getElementById('detailMap').style.display = 'none';
+        document.getElementById('detailMapNoCoords').style.display = 'flex';
+        document.getElementById('openMapWrap').style.display = 'none';
+      }
+
+      // --- Owner & Contact ---
+      document.getElementById('ownerName').textContent = ownerName;
+      document.getElementById('ownerAvatar').src = `https://ui-avatars.com/api/?name=${encodeURIComponent(ownerName)}&background=ff6b00&color=fff&size=48`;
+
+      const phone = (ownerPhone||'').replace(/[^0-9]/g,'');
+      document.getElementById('whatsappBtn').onclick = () =>
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent('Hi, I\'m interested in "'+title+'" listed on Nestify. Can you share more details?')}`);
+      document.getElementById('callBtn').onclick = () => window.open(`tel:${ownerPhone}`);
+
+      // --- Sidebar details ---
+      document.getElementById('propertyDetails').innerHTML = `
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted-custom fs-sm">Room Type</span><span class="fw-600 fs-sm">${esc(type)}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted-custom fs-sm">Bathroom</span><span class="fw-600 fs-sm">${bathroom==='attached'?'Attached':'Shared'}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted-custom fs-sm">Food</span>
+          <span class="fw-600 fs-sm ${foodIncluded?'text-accent':''}">${foodIncluded?'Included':'Not Included'}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted-custom fs-sm">AC</span>
+          <span class="fw-600 fs-sm ${ac?'text-accent':''}">${ac?'Yes':'No'}</span>
+        </div>
+        ${securityDeposit?`<div class="d-flex justify-content-between"><span class="text-muted-custom fs-sm">Security Deposit</span><span class="fw-600 fs-sm">₹${Number(securityDeposit).toLocaleString('en-IN')}</span></div>`:''}`;
+
+      // --- Share ---
+      document.getElementById('detailShareBtn').onclick = () => {
+        if (navigator.share) {
+          navigator.share({ title, url:window.location.href });
+        } else {
+          navigator.clipboard.writeText(window.location.href);
+          if (window.showToast) window.showToast('Link copied!', 'success');
+        }
+      };
+
+      // Show content
+      document.getElementById('detailLoading').style.display = 'none';
+      document.getElementById('detailLoaded').style.display = 'block';
+    }
+
+    function showError() {
+      document.getElementById('detailLoading').style.display = 'none';
+      document.getElementById('detailError').style.display = 'block';
+      document.title = 'Not Found — Nestify';
+    }
+
+    function esc(t) {
+      if (!t) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

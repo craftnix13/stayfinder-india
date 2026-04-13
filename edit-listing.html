@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Listing — Nestify</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    #locationMap { height:240px; border-radius:var(--radius-md); border:1px solid var(--border-color); }
+    .coords-display { display:none; background:var(--bg-input); border-radius:var(--radius-sm); padding:0.4rem 0.8rem; font-size:0.82rem; color:var(--accent); margin-top:0.5rem; }
+    .map-hint { font-size:0.8rem; color:var(--text-muted); margin-top:0.4rem; }
+    .existing-image-wrap { position:relative; display:inline-block; }
+    .existing-image-wrap img { width:90px; height:70px; object-fit:cover; border-radius:var(--radius-sm); border:2px solid var(--border-color); }
+    .existing-image-wrap .remove-btn { position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:var(--danger); border:none; color:#fff; font-size:0.7rem; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-nestify" id="mainNavbar">
+    <div class="container-fluid px-3">
+      <a class="navbar-brand navbar-brand-nestify" href="index.html"><i class="bi bi-house-heart-fill"></i> NEST<span>IFY</span></a>
+      <div class="ms-auto nav-auth-section"></div>
+    </div>
+  </nav>
+
+  <div class="dashboard-layout">
+    <div class="container-fluid">
+      <div class="row">
+
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3 p-0">
+          <div class="dashboard-sidebar">
+            <nav class="dashboard-sidebar-nav">
+              <a href="client-dashboard.html" class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+              <a href="add-listing.html" class="sidebar-link"><i class="bi bi-plus-circle"></i> Add Listing</a>
+              <a href="my-listings.html" class="sidebar-link active"><i class="bi bi-building"></i> My Listings</a>
+              <a href="#" class="sidebar-link"><i class="bi bi-chat-dots"></i> Leads</a>
+              <a href="#" class="sidebar-link"><i class="bi bi-bar-chart"></i> Analytics</a>
+              <a href="#" class="sidebar-link"><i class="bi bi-gear"></i> Settings</a>
+            </nav>
+          </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+          <div class="dashboard-content">
+
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-5">
+              <div class="spinner-border text-accent" role="status"></div>
+              <p class="text-muted-custom mt-3">Loading listing data...</p>
+            </div>
+
+            <!-- Form (hidden until data loaded) -->
+            <div id="formWrap" style="display:none;">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                <div>
+                  <h3 class="fw-700 mb-1">Edit Listing</h3>
+                  <p class="text-muted-custom fs-sm">Update your property details below</p>
+                </div>
+                <a href="my-listings.html" class="btn btn-dark-custom btn-sm-custom">
+                  <i class="bi bi-arrow-left me-1"></i> Back to My Listings
+                </a>
+              </div>
+
+              <!-- Status Banner -->
+              <div id="statusBanner" class="mb-4" style="display:none;">
+                <div class="detail-content-card" style="padding:0.75rem 1.2rem;">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-info-circle text-accent"></i>
+                    <span class="fs-sm" id="statusBannerText"></span>
+                  </div>
+                </div>
+              </div>
+
+              <form id="editListingForm">
+                <div class="row g-4">
+                  <div class="col-lg-8">
+
+                    <!-- Basic Info -->
+                    <div class="form-card">
+                      <h5 class="form-card-title"><i class="bi bi-info-circle"></i> Basic Information</h5>
+                      <div class="row g-3">
+                        <div class="col-12">
+                          <label class="form-label-dark">Property Title *</label>
+                          <input type="text" id="title" class="form-control-dark" required>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label-dark">Property Type *</label>
+                          <select id="type" class="form-select-dark" required>
+                            <option value="">Select Type</option>
+                            <option value="PG">PG</option>
+                            <option value="Room">Room</option>
+                          </select>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label-dark">Category *</label>
+                          <select id="category" class="form-select-dark" required>
+                            <option value="">Select Category</option>
+                            <option value="boys">Boys</option>
+                            <option value="girls">Girls</option>
+                            <option value="coliving">Co-Living</option>
+                          </select>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label-dark">Monthly Rent (₹) *</label>
+                          <input type="number" id="price" class="form-control-dark" required>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label-dark">Security Deposit (₹)</label>
+                          <input type="number" id="securityDeposit" class="form-control-dark">
+                        </div>
+                        <div class="col-12">
+                          <label class="form-label-dark">Description *</label>
+                          <textarea id="description" class="form-control-dark" rows="4" required></textarea>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="form-card">
+                      <h5 class="form-card-title"><i class="bi bi-geo-alt"></i> Location Details</h5>
+                      <div class="row g-3">
+                        <div class="col-12">
+                          <label class="form-label-dark">Full Address *</label>
+                          <input type="text" id="address" class="form-control-dark" required>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label-dark">Area / Locality *</label>
+                          <input type="text" id="location" class="form-control-dark" required>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label-dark">City *</label>
+                          <select id="city" class="form-select-dark">
+                            <option value="Pune">Pune</option>
+                            <option value="Mumbai">Mumbai</option>
+                            <option value="Bangalore">Bangalore</option>
+                            <option value="Delhi">Delhi</option>
+                          </select>
+                        </div>
+                        <input type="hidden" id="lat">
+                        <input type="hidden" id="lng">
+                        <div class="col-12">
+                          <label class="form-label-dark">Update Location on Map</label>
+                          <div id="locationMap"></div>
+                          <p class="map-hint"><i class="bi bi-hand-index text-accent"></i> Click map to update pin location</p>
+                          <div class="coords-display" id="coordsDisplay">
+                            <i class="bi bi-geo-alt-fill me-1"></i>
+                            <span id="coordsText"></span>
+                            <span class="ms-2 text-muted-custom fs-xs">✓ Location updated</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Images -->
+                    <div class="form-card">
+                      <h5 class="form-card-title"><i class="bi bi-images"></i> Property Images</h5>
+
+                      <!-- Existing images -->
+                      <div id="existingImagesWrap" class="mb-3" style="display:none;">
+                        <p class="form-label-dark mb-2">Current Images</p>
+                        <div class="d-flex flex-wrap gap-2" id="existingImagesGrid"></div>
+                      </div>
+
+                      <!-- Upload new -->
+                      <div class="image-upload-zone" id="imageUploadZone">
+                        <i class="bi bi-cloud-arrow-up d-block"></i>
+                        <h5>Add more images</h5>
+                        <p>Upload additional images (JPG, PNG, max 5MB each)</p>
+                        <input type="file" multiple accept="image/*" style="display:none;" id="imageInput">
+                      </div>
+                      <div class="image-preview-grid mt-2" id="newImagesGrid"></div>
+                    </div>
+
+                    <!-- Amenities -->
+                    <div class="form-card">
+                      <h5 class="form-card-title"><i class="bi bi-grid"></i> Amenities</h5>
+                      <div class="amenity-toggle-group" id="amenityGroup">
+                        <button type="button" class="amenity-toggle" data-amenity="WiFi"><i class="bi bi-wifi"></i> WiFi</button>
+                        <button type="button" class="amenity-toggle" data-amenity="AC"><i class="bi bi-snow"></i> AC</button>
+                        <button type="button" class="amenity-toggle" data-amenity="Meals"><i class="bi bi-egg-fried"></i> Meals</button>
+                        <button type="button" class="amenity-toggle" data-amenity="Attached Bath"><i class="bi bi-droplet"></i> Attached Bath</button>
+                        <button type="button" class="amenity-toggle" data-amenity="TV"><i class="bi bi-tv"></i> TV</button>
+                        <button type="button" class="amenity-toggle" data-amenity="Security"><i class="bi bi-shield-check"></i> Security</button>
+                        <button type="button" class="amenity-toggle" data-amenity="Parking"><i class="bi bi-car-front"></i> Parking</button>
+                        <button type="button" class="amenity-toggle" data-amenity="RO Water"><i class="bi bi-water"></i> RO Water</button>
+                        <button type="button" class="amenity-toggle" data-amenity="Power Backup"><i class="bi bi-lightning"></i> Power Backup</button>
+                        <button type="button" class="amenity-toggle" data-amenity="Housekeeping"><i class="bi bi-house-door"></i> Housekeeping</button>
+                        <button type="button" class="amenity-toggle" data-amenity="Gym"><i class="bi bi-bicycle"></i> Gym</button>
+                        <button type="button" class="amenity-toggle" data-amenity="Laundry"><i class="bi bi-box"></i> Laundry</button>
+                        <button type="button" class="amenity-toggle" data-amenity="Geyser"><i class="bi bi-thermometer-half"></i> Geyser</button>
+                        <button type="button" class="amenity-toggle" data-amenity="Kitchen"><i class="bi bi-cup-hot"></i> Kitchen</button>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  <!-- Right Sidebar -->
+                  <div class="col-lg-4">
+
+                    <div class="form-card">
+                      <h5 class="form-card-title"><i class="bi bi-door-open"></i> Room Details</h5>
+                      <div class="row g-3">
+                        <div class="col-12">
+                          <label class="form-label-dark">Bathroom Type *</label>
+                          <select id="bathroom" class="form-select-dark" required>
+                            <option value="">Select</option>
+                            <option value="attached">Attached</option>
+                            <option value="shared">Shared</option>
+                          </select>
+                        </div>
+                        <div class="col-12">
+                          <div class="form-check-dark form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="foodCheck">
+                            <label class="form-check-label" for="foodCheck">Food Included</label>
+                          </div>
+                          <div class="form-check-dark form-check">
+                            <input class="form-check-input" type="checkbox" id="acCheck">
+                            <label class="form-check-label" for="acCheck">AC Available</label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="form-card">
+                      <h5 class="form-card-title"><i class="bi bi-telephone"></i> Contact Info</h5>
+                      <label class="form-label-dark">WhatsApp Number *</label>
+                      <input type="tel" id="ownerPhone" class="form-control-dark" required>
+                    </div>
+
+                    <!-- Current Status Info -->
+                    <div class="form-card">
+                      <h5 class="form-card-title"><i class="bi bi-info-circle"></i> Listing Status</h5>
+                      <div id="currentStatusBadge" class="mb-3"></div>
+                      <p class="fs-sm text-muted-custom">
+                        <i class="bi bi-exclamation-circle text-warning"></i>
+                        Editing will reset status to <strong>Pending</strong> — admin will re-review.
+                      </p>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="form-card text-center">
+                      <button type="submit" id="updateBtn" class="btn btn-accent w-100" style="padding:0.8rem;">
+                        <i class="bi bi-check-lg"></i> Update Listing
+                      </button>
+                      <a href="my-listings.html" class="btn btn-dark-custom w-100 mt-2">
+                        <i class="bi bi-x-lg"></i> Cancel
+                      </a>
+                      <div id="formError" style="display:none;margin-top:1rem;background:rgba(255,61,61,0.15);border:1px solid rgba(255,61,61,0.4);color:#ff6b6b;padding:0.75rem;border-radius:10px;font-size:0.85rem;text-align:left;"></div>
+                    </div>
+
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" style="display:none;" class="text-center py-5">
+              <i class="bi bi-exclamation-triangle text-danger" style="font-size:2.5rem;"></i>
+              <h5 class="mt-3">Listing Not Found</h5>
+              <p class="text-muted-custom fs-sm">This listing doesn't exist or you don't have permission to edit it.</p>
+              <a href="my-listings.html" class="btn btn-accent mt-2">Back to My Listings</a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/app.js"></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCB3n4oRMttZP3hEstN1WhQIUSfnMcNK3o",
+      authDomain: "stayfinder-india.firebaseapp.com",
+      projectId: "stayfinder-india",
+      storageBucket: "stayfinder-india.firebasestorage.app",
+      messagingSenderId: "645510509071",
+      appId: "1:645510509071:web:d9924d4780d3f185a5e97a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Get listing ID from URL
+    const params = new URLSearchParams(window.location.search);
+    const listingId = params.get('id');
+
+    let currentUser = null;
+    let existingImages = [];   // images already saved in Firebase
+    let newImages = [];        // newly uploaded base64 images
+    let removedIndexes = [];   // indexes of existing images to remove
+    let pickedLat = null;
+    let pickedLng = null;
+    let mapInstance = null;
+    let pinMarker = null;
+
+    // Auth check
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = 'login.html'; return; }
+      currentUser = user;
+
+      if (!listingId) { showError(); return; }
+      await loadListing();
+    });
+
+    // Load listing data from Firestore
+    async function loadListing() {
+      try {
+        const snap = await getDoc(doc(db, "listings", listingId));
+
+        if (!snap.exists()) { showError(); return; }
+
+        const listing = { id: snap.id, ...snap.data() };
+
+        // Only owner or admin can edit
+        const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+        const role = userSnap.data()?.role || 'user';
+        if (listing.ownerId !== currentUser.uid && role !== 'admin') {
+          showError(); return;
+        }
+
+        populateForm(listing);
+        initMap(listing.lat, listing.lng);
+
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('formWrap').style.display = 'block';
+
+      } catch(err) {
+        console.error(err);
+        showError();
+      }
+    }
+
+    // Populate form with existing data
+    function populateForm(listing) {
+      document.title = `Edit: ${listing.title} — Nestify`;
+
+      // Basic fields
+      setVal('title', listing.title);
+      setVal('type', listing.type);
+      setVal('category', listing.category);
+      setVal('price', listing.price);
+      setVal('securityDeposit', listing.securityDeposit || '');
+      setVal('description', listing.description);
+      setVal('address', listing.address);
+      setVal('location', listing.location);
+      setVal('city', listing.city || 'Pune');
+      setVal('bathroom', listing.bathroom);
+      setVal('ownerPhone', listing.ownerPhone);
+
+      // Checkboxes
+      document.getElementById('foodCheck').checked = listing.foodIncluded || false;
+      document.getElementById('acCheck').checked   = listing.ac || false;
+
+      // Amenities
+      const saved = listing.amenities || [];
+      document.querySelectorAll('#amenityGroup .amenity-toggle').forEach(btn => {
+        if (saved.includes(btn.dataset.amenity)) btn.classList.add('active');
+      });
+
+      // Existing images
+      existingImages = listing.images || [];
+      if (existingImages.length > 0) {
+        document.getElementById('existingImagesWrap').style.display = 'block';
+        renderExistingImages();
+      }
+
+      // Status badge
+      const statusMap = {
+        approved: `<span class="status-badge approved"><i class="bi bi-check-circle"></i> Approved</span>`,
+        pending:  `<span class="status-badge pending"><i class="bi bi-clock"></i> Pending</span>`,
+        rejected: `<span class="status-badge rejected"><i class="bi bi-x-circle"></i> Rejected</span>`,
+        draft:    `<span class="status-badge" style="background:rgba(176,176,176,0.15);color:#b0b0b0;"><i class="bi bi-file-earmark"></i> Draft</span>`
+      };
+      document.getElementById('currentStatusBadge').innerHTML =
+        `Current: ${statusMap[listing.status] || statusMap.pending}`;
+
+      // Store current lat/lng
+      pickedLat = listing.lat || null;
+      pickedLng = listing.lng || null;
+      if (pickedLat && pickedLng) {
+        document.getElementById('lat').value = pickedLat;
+        document.getElementById('lng').value = pickedLng;
+        document.getElementById('coordsText').textContent = `${pickedLat}, ${pickedLng}`;
+        document.getElementById('coordsDisplay').style.display = 'block';
+      }
+    }
+
+    function setVal(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.value = val || '';
+    }
+
+    // Render existing images with remove button
+    function renderExistingImages() {
+      const grid = document.getElementById('existingImagesGrid');
+      grid.innerHTML = existingImages.map((img, i) => {
+        if (removedIndexes.includes(i)) return '';
+        return `
+          <div class="existing-image-wrap" id="existing-img-${i}">
+            <img src="${img.startsWith('http') ? img : img.substring(0, 100) + '...'}"
+                 onerror="this.src='https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=90&h=70&fit=crop'"
+                 alt="Image ${i+1}">
+            <button class="remove-btn" type="button" onclick="removeExistingImage(${i})">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>`;
+      }).join('');
+    }
+
+    window.removeExistingImage = function(idx) {
+      removedIndexes.push(idx);
+      const el = document.getElementById(`existing-img-${idx}`);
+      if (el) el.remove();
+    };
+
+    // Init Leaflet map
+    function initMap(lat, lng) {
+      const center = (lat && lng) ? [lat, lng] : [18.5204, 73.8567];
+      const zoom   = (lat && lng) ? 15 : 12;
+
+      mapInstance = L.map('locationMap', { center, zoom });
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© OpenStreetMap © CARTO',
+        subdomains: 'abcd', maxZoom: 19
+      }).addTo(mapInstance);
+
+      const pinIcon = L.divIcon({
+        className: '',
+        html: `<div style="background:#ff6b00;width:18px;height:18px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(255,107,0,0.7);"></div>`,
+        iconAnchor: [9, 9]
+      });
+
+      // If existing coords, show pin
+      if (lat && lng) {
+        pinMarker = L.marker([lat, lng], { icon: pinIcon }).addTo(mapInstance);
+      }
+
+      mapInstance.on('click', (e) => {
+        pickedLat = parseFloat(e.latlng.lat.toFixed(6));
+        pickedLng = parseFloat(e.latlng.lng.toFixed(6));
+        document.getElementById('lat').value = pickedLat;
+        document.getElementById('lng').value = pickedLng;
+
+        if (pinMarker) pinMarker.setLatLng(e.latlng);
+        else pinMarker = L.marker(e.latlng, { icon: pinIcon }).addTo(mapInstance);
+
+        document.getElementById('coordsText').textContent = `${pickedLat}, ${pickedLng}`;
+        document.getElementById('coordsDisplay').style.display = 'block';
+      });
+    }
+
+    // New image upload
+    const imageInput = document.getElementById('imageInput');
+    document.getElementById('imageUploadZone').addEventListener('click', () => imageInput.click());
+
+    imageInput.addEventListener('change', function() {
+      [...this.files].forEach(file => {
+        if ((existingImages.length - removedIndexes.length + newImages.length) >= 10) {
+          showFormError('Maximum 10 images allowed.'); return;
+        }
+        if (file.size > 5*1024*1024) { showFormError(file.name + ' too large (max 5MB).'); return; }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          newImages.push(e.target.result);
+          const idx = newImages.length - 1;
+          const item = document.createElement('div');
+          item.className = 'image-preview-item';
+          item.innerHTML = `<img src="${e.target.result}" alt=""><button class="remove-btn" type="button"><i class="bi bi-x"></i></button>`;
+          item.querySelector('.remove-btn').onclick = () => {
+            newImages.splice(idx, 1);
+            item.remove();
+          };
+          document.getElementById('newImagesGrid').appendChild(item);
+        };
+        reader.readAsDataURL(file);
+      });
+      this.value = '';
+    });
+
+    // Amenity toggles
+    document.querySelectorAll('#amenityGroup .amenity-toggle').forEach(btn => {
+      btn.addEventListener('click', () => btn.classList.toggle('active'));
+    });
+
+    function getAmenities() {
+      return [...document.querySelectorAll('#amenityGroup .amenity-toggle.active')].map(b => b.dataset.amenity);
+    }
+
+    // Validation
+    function validate() {
+      const fields = [
+        ['title','Property Title'],['type','Property Type'],['category','Category'],
+        ['price','Monthly Rent'],['description','Description'],['address','Full Address'],
+        ['location','Area / Locality'],['bathroom','Bathroom Type'],['ownerPhone','WhatsApp Number']
+      ];
+      for (const [id, label] of fields) {
+        const el = document.getElementById(id);
+        if (!el?.value?.trim()) { showFormError('Please fill: ' + label); el?.focus(); return false; }
+      }
+      return true;
+    }
+
+    function showFormError(msg) {
+      const el = document.getElementById('formError');
+      el.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i>${msg}`;
+      el.style.display = 'block';
+      el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    }
+    function hideFormError() { document.getElementById('formError').style.display = 'none'; }
+
+    function setLoading(on) {
+      const btn = document.getElementById('updateBtn');
+      btn.disabled = on;
+      btn.innerHTML = on
+        ? '<span class="spinner-border spinner-border-sm me-2"></span>Updating...'
+        : '<i class="bi bi-check-lg"></i> Update Listing';
+    }
+
+    // Submit
+    document.getElementById('editListingForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!validate()) return;
+      hideFormError();
+      setLoading(true);
+
+      try {
+        // Build final images array:
+        // Keep existing images that weren't removed + add new ones
+        const keptExisting = existingImages.filter((_, i) => !removedIndexes.includes(i));
+        const finalImages = [...keptExisting, ...newImages];
+
+        const updatedData = {
+          title:           document.getElementById('title').value.trim(),
+          type:            document.getElementById('type').value,
+          category:        document.getElementById('category').value,
+          price:           Number(document.getElementById('price').value),
+          securityDeposit: Number(document.getElementById('securityDeposit').value) || 0,
+          description:     document.getElementById('description').value.trim(),
+          address:         document.getElementById('address').value.trim(),
+          location:        document.getElementById('location').value.trim(),
+          city:            document.getElementById('city').value,
+          lat:             pickedLat,
+          lng:             pickedLng,
+          bathroom:        document.getElementById('bathroom').value,
+          foodIncluded:    document.getElementById('foodCheck').checked,
+          ac:              document.getElementById('acCheck').checked,
+          amenities:       getAmenities(),
+          ownerPhone:      document.getElementById('ownerPhone').value.trim(),
+          images:          finalImages,
+          status:          'pending',   // reset to pending after edit
+          updatedAt:       serverTimestamp()
+        };
+
+        await updateDoc(doc(db, "listings", listingId), updatedData);
+
+        if (window.showToast) window.showToast('Listing updated! Pending admin re-approval.', 'success');
+        setTimeout(() => window.location.href = 'my-listings.html', 1500);
+
+      } catch(err) {
+        console.error(err);
+        showFormError('Update failed: ' + err.message);
+        setLoading(false);
+      }
+    });
+
+    function showError() {
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('errorState').style.display = 'block';
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Listings — Nestify</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-nestify" id="mainNavbar">
+    <div class="container-fluid px-3">
+      <a class="navbar-brand navbar-brand-nestify" href="index.html"><i class="bi bi-house-heart-fill"></i> NEST<span>IFY</span></a>
+      <div class="ms-auto nav-auth-section"></div>
+    </div>
+  </nav>
+
+  <div class="dashboard-layout">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-2 col-md-3 p-0">
+          <div class="dashboard-sidebar">
+            <nav class="dashboard-sidebar-nav">
+              <a href="client-dashboard.html" class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+              <a href="add-listing.html" class="sidebar-link"><i class="bi bi-plus-circle"></i> Add Listing</a>
+              <a href="my-listings.html" class="sidebar-link active"><i class="bi bi-building"></i> My Listings</a>
+              <a href="#" class="sidebar-link"><i class="bi bi-chat-dots"></i> Leads</a>
+              <a href="#" class="sidebar-link"><i class="bi bi-bar-chart"></i> Analytics</a>
+              <a href="#" class="sidebar-link"><i class="bi bi-gear"></i> Settings</a>
+            </nav>
+          </div>
+        </div>
+
+        <div class="col-lg-10 col-md-9">
+          <div class="dashboard-content">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+              <div>
+                <h3 class="fw-700 mb-1">My Listings</h3>
+                <p class="text-muted-custom fs-sm">Manage all your property listings</p>
+              </div>
+              <div class="d-flex gap-2">
+                <select class="form-select-dark" id="statusFilter" style="width:auto;padding:0.4rem 2rem 0.4rem 0.8rem;font-size:0.85rem;">
+                  <option value="">All Status</option>
+                  <option value="approved">Approved</option>
+                  <option value="pending">Pending</option>
+                  <option value="draft">Draft</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+                <a href="add-listing.html" class="btn btn-accent btn-sm-custom">
+                  <i class="bi bi-plus-lg"></i> Add New
+                </a>
+              </div>
+            </div>
+
+            <!-- Table -->
+            <div class="detail-content-card">
+              <div id="listingsTableWrap">
+                <!-- Loading -->
+                <div id="loadingState" class="text-center py-5">
+                  <div class="spinner-border text-accent" role="status"></div>
+                  <p class="text-muted-custom mt-2 fs-sm">Loading your listings...</p>
+                </div>
+
+                <!-- Table (hidden until loaded) -->
+                <div id="tableState" style="display:none;">
+                  <div class="table-dark-custom">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Property</th>
+                          <th>Type</th>
+                          <th>Price</th>
+                          <th>Status</th>
+                          <th>Views</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="listingsTbody"></tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Empty state -->
+                <div id="emptyState" style="display:none;">
+                  <div class="empty-state py-5">
+                    <i class="bi bi-building" style="font-size:2.5rem;opacity:0.3;"></i>
+                    <h5 class="mt-3">No Listings Yet</h5>
+                    <p class="text-muted-custom fs-sm">You haven't added any listings yet.</p>
+                    <a href="add-listing.html" class="btn btn-accent mt-2"><i class="bi bi-plus-lg me-1"></i> Add Your First Listing</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background:var(--bg-card);border-color:var(--border-color);">
+        <div class="modal-header" style="border-color:var(--border-color);">
+          <h5 class="modal-title text-light">Delete Listing</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-muted-custom">
+          Are you sure you want to delete <strong id="deleteListingTitle" class="text-light"></strong>? This cannot be undone.
+        </div>
+        <div class="modal-footer" style="border-color:var(--border-color);">
+          <button type="button" class="btn btn-dark-custom" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+    import { getFirestore, collection, query, where, getDocs, deleteDoc, doc, orderBy } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCB3n4oRMttZP3hEstN1WhQIUSfnMcNK3o",
+      authDomain: "stayfinder-india.firebaseapp.com",
+      projectId: "stayfinder-india",
+      storageBucket: "stayfinder-india.firebasestorage.app",
+      messagingSenderId: "645510509071",
+      appId: "1:645510509071:web:d9924d4780d3f185a5e97a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let allListings = [];
+    let deleteTargetId = null;
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = 'login.html'; return; }
+      currentUser = user;
+      await loadListings();
+    });
+
+    async function loadListings() {
+      try {
+        const q = query(
+          collection(db, "listings"),
+          where("ownerId", "==", currentUser.uid)
+        );
+        const snap = await getDocs(q);
+        allListings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Sort newest first client-side
+        allListings.sort((a, b) => {
+          const da = a.createdAt?.toDate?.() || new Date(0);
+          const db2 = b.createdAt?.toDate?.() || new Date(0);
+          return db2 - da;
+        });
+        renderTable(allListings);
+      } catch(err) {
+        console.error(err);
+        document.getElementById('loadingState').innerHTML =
+          `<p class="text-danger text-center py-4">Failed to load listings: ${err.message}</p>`;
+      }
+    }
+
+    function renderTable(listings) {
+      document.getElementById('loadingState').style.display = 'none';
+      if (listings.length === 0) {
+        document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('tableState').style.display = 'none';
+        return;
+      }
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('tableState').style.display = 'block';
+
+      const tbody = document.getElementById('listingsTbody');
+      tbody.innerHTML = listings.map(l => {
+        const img = l.images?.[0] || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=60&h=60&fit=crop';
+        const price = '₹' + Number(l.price || 0).toLocaleString('en-IN');
+
+        const statusMap = {
+          approved: `<span class="status-badge approved"><i class="bi bi-check-circle"></i> Approved</span>`,
+          pending:  `<span class="status-badge pending"><i class="bi bi-clock"></i> Pending</span>`,
+          rejected: `<span class="status-badge rejected"><i class="bi bi-x-circle"></i> Rejected</span>`,
+          draft:    `<span class="status-badge" style="background:rgba(176,176,176,0.15);color:#b0b0b0;"><i class="bi bi-file-earmark"></i> Draft</span>`
+        };
+        const statusBadge = statusMap[l.status] || statusMap.pending;
+
+        return `
+          <tr>
+            <td>
+              <div class="table-user-info">
+                <img src="${esc(img)}" style="border-radius:6px;width:48px;height:48px;object-fit:cover;"
+                     onerror="this.src='https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=60&h=60&fit=crop'" alt="">
+                <div>
+                  <h6 style="font-size:0.88rem;">${esc(l.title)}</h6>
+                  <p style="font-size:0.75rem;">${esc(l.location || '')}, ${esc(l.city || '')}</p>
+                </div>
+              </div>
+            </td>
+            <td><span class="badge-type">${esc(l.type || 'PG')}</span></td>
+            <td class="fw-600">${price}</td>
+            <td>${statusBadge}</td>
+            <td class="text-muted-custom">${l.viewsCount || 0}</td>
+            <td>
+              <div class="d-flex gap-1">
+                <a href="detail.html?id=${l.id}" class="btn-icon" title="View"><i class="bi bi-eye"></i></a>
+                <a href="edit-listing.html?id=${l.id}" class="btn-icon" title="Edit"><i class="bi bi-pencil"></i></a>
+                <button class="btn-icon delete-btn" title="Delete"
+                        style="border-color:var(--danger);color:var(--danger);"
+                        data-id="${l.id}" data-title="${esc(l.title)}">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>`;
+      }).join('');
+
+      // Attach delete listeners
+      tbody.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          deleteTargetId = btn.dataset.id;
+          document.getElementById('deleteListingTitle').textContent = btn.dataset.title;
+          deleteModal.show();
+        });
+      });
+    }
+
+    // Confirm delete
+    document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+      if (!deleteTargetId) return;
+      try {
+        await deleteDoc(doc(db, "listings", deleteTargetId));
+        deleteModal.hide();
+        allListings = allListings.filter(l => l.id !== deleteTargetId);
+        renderTable(allListings);
+        if (window.showToast) window.showToast('Listing deleted.', 'success');
+        deleteTargetId = null;
+      } catch(err) {
+        if (window.showToast) window.showToast('Delete failed: ' + err.message, 'error');
+      }
+    });
+
+    // Status filter
+    document.getElementById('statusFilter').addEventListener('change', function() {
+      const val = this.value;
+      renderTable(val ? allListings.filter(l => l.status === val) : allListings);
+    });
+
+    function esc(t) {
+      if (!t) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

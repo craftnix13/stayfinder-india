@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Listings — Admin — Nestify</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-nestify" id="mainNavbar">
+    <div class="container-fluid px-3">
+      <a class="navbar-brand navbar-brand-nestify" href="index.html"><i class="bi bi-house-heart-fill"></i> NEST<span>IFY</span></a>
+      <span class="badge bg-danger ms-2" style="font-size:0.7rem;">ADMIN</span>
+      <div class="ms-auto nav-auth-section"></div>
+    </div>
+  </nav>
+
+  <div class="dashboard-layout">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-2 col-md-3 p-0">
+          <div class="dashboard-sidebar">
+            <nav class="dashboard-sidebar-nav">
+              <a href="admin-dashboard.html" class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+              <a href="manage-listings.html" class="sidebar-link active"><i class="bi bi-building"></i> Manage Listings</a>
+              <a href="manage-users.html" class="sidebar-link"><i class="bi bi-people"></i> Manage Users</a>
+              <a href="#" class="sidebar-link"><i class="bi bi-star"></i> Reviews</a>
+              <a href="#" class="sidebar-link"><i class="bi bi-gear"></i> Settings</a>
+            </nav>
+          </div>
+        </div>
+
+        <div class="col-lg-10 col-md-9">
+          <div class="dashboard-content">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+              <div>
+                <h3 class="fw-700 mb-1">Manage Listings</h3>
+                <p class="text-muted-custom fs-sm">Review, approve, and manage all property listings</p>
+              </div>
+              <div class="d-flex gap-2">
+                <select class="form-select-dark" id="statusFilter" style="width:auto;padding:0.4rem 2rem 0.4rem 0.8rem;font-size:0.85rem;">
+                  <option value="">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                  <option value="draft">Draft</option>
+                </select>
+                <input type="text" class="form-control-dark" id="searchInput"
+                       placeholder="Search..." style="width:180px;padding:0.4rem 0.8rem;font-size:0.85rem;">
+              </div>
+            </div>
+
+            <div id="loadingState" class="text-center py-5">
+              <div class="spinner-border text-accent"></div>
+              <p class="text-muted-custom mt-2 fs-sm">Loading listings...</p>
+            </div>
+
+            <div id="tableWrap" style="display:none;">
+              <div class="table-dark-custom">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Property</th>
+                      <th>Owner</th>
+                      <th>Type</th>
+                      <th>Price</th>
+                      <th>Status</th>
+                      <th>Featured</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="listingsTbody"></tbody>
+                </table>
+              </div>
+              <p class="text-muted-custom fs-sm mt-2" id="resultsCount"></p>
+            </div>
+
+            <div id="emptyState" style="display:none;" class="text-center py-5">
+              <i class="bi bi-building" style="font-size:2rem;opacity:0.3;"></i>
+              <p class="text-muted-custom mt-2">No listings found.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Modal -->
+  <div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background:var(--bg-card);border-color:var(--border-color);">
+        <div class="modal-header" style="border-color:var(--border-color);">
+          <h5 class="modal-title text-light">Delete Listing</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-muted-custom">
+          Delete <strong id="deleteTitle" class="text-light"></strong>? This cannot be undone.
+        </div>
+        <div class="modal-footer" style="border-color:var(--border-color);">
+          <button class="btn btn-dark-custom" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-danger" id="confirmDelete">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCB3n4oRMttZP3hEstN1WhQIUSfnMcNK3o",
+      authDomain: "stayfinder-india.firebaseapp.com",
+      projectId: "stayfinder-india",
+      storageBucket: "stayfinder-india.firebasestorage.app",
+      messagingSenderId: "645510509071",
+      appId: "1:645510509071:web:d9924d4780d3f185a5e97a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let allListings = [], deleteId = null;
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = 'login.html'; return; }
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (!snap.exists() || snap.data().role !== 'admin') { window.location.href = 'index.html'; return; }
+      loadListings();
+    });
+
+    async function loadListings() {
+      try {
+        const snap = await getDocs(collection(db, "listings"));
+        allListings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        allListings.sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+        document.getElementById('loadingState').style.display = 'none';
+        renderTable(allListings);
+      } catch(err) {
+        document.getElementById('loadingState').innerHTML = `<p class="text-danger">${err.message}</p>`;
+      }
+    }
+
+    function renderTable(listings) {
+      if (listings.length === 0) {
+        document.getElementById('tableWrap').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
+        return;
+      }
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('tableWrap').style.display = 'block';
+      document.getElementById('resultsCount').textContent = `Showing ${listings.length} listing${listings.length !== 1 ? 's' : ''}`;
+
+      const statusMap = {
+        approved: `<span class="status-badge approved"><i class="bi bi-check-circle"></i> Approved</span>`,
+        pending:  `<span class="status-badge pending"><i class="bi bi-clock"></i> Pending</span>`,
+        rejected: `<span class="status-badge rejected"><i class="bi bi-x-circle"></i> Rejected</span>`,
+        draft:    `<span class="status-badge" style="background:rgba(176,176,176,0.15);color:#b0b0b0;"><i class="bi bi-file-earmark"></i> Draft</span>`
+      };
+
+      const tbody = document.getElementById('listingsTbody');
+      tbody.innerHTML = listings.map(l => {
+        const img = l.images?.[0] || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=60&h=60&fit=crop';
+        const price = '₹' + Number(l.price || 0).toLocaleString('en-IN');
+        const isPending = l.status === 'pending';
+        const isApproved = l.status === 'approved';
+
+        return `
+          <tr id="row-${l.id}">
+            <td>
+              <div class="table-user-info">
+                <img src="${esc(img)}" style="border-radius:6px;width:52px;height:42px;object-fit:cover;"
+                     onerror="this.src='https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=60&h=60&fit=crop'" alt="">
+                <div>
+                  <h6>${esc(l.title)}</h6>
+                  <p>${esc(l.location || '')}, ${esc(l.city || '')}</p>
+                </div>
+              </div>
+            </td>
+            <td class="fs-sm text-muted-custom">${esc(l.ownerName || '—')}</td>
+            <td><span class="badge-type">${esc(l.type || 'PG')}</span></td>
+            <td class="fw-600">${price}</td>
+            <td>${statusMap[l.status] || statusMap.pending}</td>
+            <td>
+              <div class="form-check form-switch">
+                <input class="form-check-input featured-toggle" type="checkbox"
+                       data-id="${l.id}" ${l.featured ? 'checked' : ''} style="cursor:pointer;">
+              </div>
+            </td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                <a href="detail.html?id=${l.id}" class="btn-icon" title="View"><i class="bi bi-eye"></i></a>
+                ${isPending ? `
+                  <button class="btn btn-accent btn-sm-custom approve-btn"
+                          style="padding:0.25rem 0.6rem;font-size:0.75rem;" data-id="${l.id}">
+                    <i class="bi bi-check-lg"></i>
+                  </button>
+                  <button class="btn btn-dark-custom btn-sm-custom reject-btn"
+                          style="padding:0.25rem 0.6rem;font-size:0.75rem;color:var(--danger);border-color:var(--danger);" data-id="${l.id}">
+                    <i class="bi bi-x-lg"></i>
+                  </button>` : ''}
+                ${isApproved ? `
+                  <button class="btn btn-dark-custom btn-sm-custom reject-btn"
+                          style="padding:0.25rem 0.6rem;font-size:0.75rem;color:var(--warning);border-color:var(--warning);" data-id="${l.id}">
+                    <i class="bi bi-pause-circle"></i>
+                  </button>` : ''}
+                ${!isPending && !isApproved ? `
+                  <button class="btn btn-accent btn-sm-custom approve-btn"
+                          style="padding:0.25rem 0.6rem;font-size:0.75rem;" data-id="${l.id}">
+                    <i class="bi bi-check-lg"></i>
+                  </button>` : ''}
+                <button class="btn-icon del-btn"
+                        style="border-color:var(--danger);color:var(--danger);"
+                        data-id="${l.id}" data-title="${esc(l.title)}">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>`;
+      }).join('');
+
+      // Approve
+      tbody.querySelectorAll('.approve-btn').forEach(btn => {
+        btn.addEventListener('click', () => changeStatus(btn.dataset.id, 'approved'));
+      });
+      // Reject
+      tbody.querySelectorAll('.reject-btn').forEach(btn => {
+        btn.addEventListener('click', () => changeStatus(btn.dataset.id, 'rejected'));
+      });
+      // Featured toggle
+      tbody.querySelectorAll('.featured-toggle').forEach(input => {
+        input.addEventListener('change', async function() {
+          await updateDoc(doc(db, "listings", this.dataset.id), { featured: this.checked });
+          if (window.showToast) window.showToast(
+            this.checked ? 'Marked as Featured!' : 'Removed from Featured', 'success'
+          );
+        });
+      });
+      // Delete
+      tbody.querySelectorAll('.del-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          deleteId = btn.dataset.id;
+          document.getElementById('deleteTitle').textContent = btn.dataset.title;
+          deleteModal.show();
+        });
+      });
+    }
+
+    async function changeStatus(id, status) {
+      try {
+        await updateDoc(doc(db, "listings", id), { status });
+        // Update in local array and re-render
+        const idx = allListings.findIndex(l => l.id === id);
+        if (idx > -1) allListings[idx].status = status;
+        applyFilters();
+        if (window.showToast) window.showToast(
+          status === 'approved' ? '✅ Listing Approved! Now live on site.' : '❌ Listing Rejected.',
+          status === 'approved' ? 'success' : 'warning'
+        );
+      } catch(err) {
+        if (window.showToast) window.showToast('Failed: ' + err.message, 'error');
+      }
+    }
+
+    document.getElementById('confirmDelete').addEventListener('click', async () => {
+      if (!deleteId) return;
+      try {
+        await deleteDoc(doc(db, "listings", deleteId));
+        allListings = allListings.filter(l => l.id !== deleteId);
+        deleteModal.hide();
+        applyFilters();
+        if (window.showToast) window.showToast('Listing deleted.', 'success');
+        deleteId = null;
+      } catch(err) {
+        if (window.showToast) window.showToast('Delete failed: ' + err.message, 'error');
+      }
+    });
+
+    function applyFilters() {
+      let results = [...allListings];
+      const status = document.getElementById('statusFilter').value;
+      const search = document.getElementById('searchInput').value.trim().toLowerCase();
+      if (status) results = results.filter(l => l.status === status);
+      if (search) results = results.filter(l =>
+        `${l.title} ${l.location} ${l.ownerName}`.toLowerCase().includes(search)
+      );
+      renderTable(results);
+    }
+
+    document.getElementById('statusFilter').addEventListener('change', applyFilters);
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+    function esc(t) {
+      if (!t) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

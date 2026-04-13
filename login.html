@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Nestify</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-nestify" id="mainNavbar">
+    <div class="container">
+      <a class="navbar-brand navbar-brand-nestify" href="index.html">
+        <i class="bi bi-house-heart-fill"></i> NEST<span>IFY</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- LOGIN SECTION -->
+  <section class="login-section">
+    <div class="login-card">
+      <div class="login-logo">
+        <i class="bi bi-house-heart-fill"></i>
+      </div>
+      <h2>Welcome to <span class="text-accent">Nestify</span></h2>
+      <p class="subtitle">Sign in to find your perfect PG or list your property</p>
+      
+      <button class="btn-google w-100" id="googleLoginBtn">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+        Continue with Google
+      </button>
+
+      <div class="login-divider">or</div>
+
+      <p class="text-muted-custom fs-sm mb-3">By continuing, you agree to our</p>
+      <div class="d-flex justify-content-center gap-3">
+        <a href="#" class="text-accent fs-sm">Terms of Service</a>
+        <a href="#" class="text-accent fs-sm">Privacy Policy</a>
+      </div>
+
+      <div class="mt-4 pt-3" style="border-top:1px solid var(--border-color);">
+        <p class="fs-xs text-muted-custom">
+          <i class="bi bi-shield-check text-accent"></i>
+          Your data is protected with enterprise-grade security
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script type="module">
+  import { loginWithGoogle, checkAuth } from "./js/auth.js";
+
+  const btn = document.getElementById("googleLoginBtn");
+
+  btn.addEventListener("click", () => {
+    loginWithGoogle();
+  });
+
+  // Already logged in check
+  checkAuth();
+</script>
+</body> 
+</html>

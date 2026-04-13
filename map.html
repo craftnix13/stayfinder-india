@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map View — Nestify</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .map-container{display:flex;height:calc(100vh - 65px);margin-top:65px;overflow:hidden}
+    .map-sidebar{width:320px;min-width:320px;background:var(--bg-secondary);border-right:1px solid var(--border-color);display:flex;flex-direction:column;overflow:hidden;z-index:10}
+    .map-sidebar-header{padding:0.9rem;border-bottom:1px solid var(--border-color);background:var(--bg-card)}
+    .map-sidebar-listings{flex:1;overflow-y:auto;padding:0.5rem}
+    .map-sidebar-card{display:flex;gap:0.75rem;padding:0.75rem;border-radius:var(--radius-md);cursor:pointer;transition:var(--transition);border:1px solid transparent;margin-bottom:0.4rem}
+    .map-sidebar-card:hover,.map-sidebar-card.active{background:var(--bg-card);border-color:var(--accent)}
+    .map-sidebar-card img{width:85px;height:65px;object-fit:cover;border-radius:var(--radius-sm);flex-shrink:0}
+    .map-sidebar-card-info h6{font-size:0.83rem;font-weight:600;margin-bottom:0.2rem;color:var(--text-primary);line-height:1.3}
+    .map-sidebar-card-info .location{font-size:0.74rem;color:var(--text-muted);margin-bottom:0.2rem}
+    .map-sidebar-card-info .price{font-size:0.85rem;font-weight:700;color:var(--accent)}
+    .map-view{flex:1;position:relative}
+    #map{width:100%;height:100%}
+    .near-me-btn{position:absolute;bottom:2rem;right:1rem;z-index:1000;background:var(--accent);color:#fff;border:none;border-radius:50px;padding:0.7rem 1.3rem;font-size:0.85rem;font-weight:600;font-family:var(--font-primary);display:flex;align-items:center;gap:0.4rem;box-shadow:0 4px 20px rgba(255,107,0,0.5);cursor:pointer;transition:var(--transition)}
+    .near-me-btn:hover{background:var(--accent-hover);transform:translateY(-2px)}
+    .near-me-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+    .radius-bar{position:absolute;top:1rem;left:50%;transform:translateX(-50%);z-index:1000;display:none;gap:0.4rem;align-items:center}
+    .radius-bar.show{display:flex}
+    .radius-btn{background:var(--bg-card);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:50px;padding:0.35rem 0.9rem;font-size:0.8rem;font-weight:500;font-family:var(--font-primary);cursor:pointer;transition:var(--transition);box-shadow:0 2px 8px rgba(0,0,0,0.4)}
+    .radius-btn:hover,.radius-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .nearby-count{position:absolute;top:3.5rem;left:50%;transform:translateX(-50%);z-index:1000;background:var(--bg-card);border:1px solid var(--accent);color:var(--accent);border-radius:50px;padding:0.3rem 1rem;font-size:0.82rem;font-weight:600;font-family:var(--font-primary);display:none;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+    .leaflet-popup-content-wrapper{background:var(--bg-card) !important;border:1px solid var(--border-color) !important;border-radius:var(--radius-md) !important;color:var(--text-primary) !important;box-shadow:var(--shadow-lg) !important}
+    .leaflet-popup-tip{background:var(--bg-card) !important}
+    .leaflet-popup-content{margin:0 !important;width:220px !important}
+    .map-popup-img{width:100%;height:110px;object-fit:cover;border-radius:6px 6px 0 0;display:block}
+    .map-popup-body{padding:0.75rem}
+    .map-popup-body h6{font-size:0.85rem;font-weight:600;margin-bottom:0.2rem;color:#fff}
+    .map-popup-body p{font-size:0.75rem;color:#b0b0b0;margin-bottom:0.3rem}
+    .map-popup-body .price{font-size:0.9rem;font-weight:700;color:#ff6b00}
+    .map-popup-body a{display:block;margin-top:0.5rem;background:#ff6b00;color:#fff;padding:0.35rem 0.8rem;border-radius:6px;font-size:0.78rem;font-weight:600;text-decoration:none;text-align:center}
+    .custom-marker{background:#ff6b00;color:#fff;font-weight:700;font-size:0.72rem;padding:4px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 8px rgba(255,107,0,0.5);position:relative}
+    .custom-marker::after{content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid #ff6b00}
+    .user-dot{width:16px;height:16px;background:#4285f4;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(66,133,244,0.6)}
+    @media(max-width:768px){.map-container{flex-direction:column}.map-sidebar{width:100%;min-width:unset;height:200px;border-right:none;border-bottom:1px solid var(--border-color)}.map-view{height:calc(100% - 200px)}}
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-nestify" id="mainNavbar">
+    <div class="container-fluid px-3">
+      <a class="navbar-brand navbar-brand-nestify" href="index.html"><i class="bi bi-house-heart-fill"></i> NEST<span>IFY</span></a>
+      <button class="navbar-toggler navbar-toggler-nestify" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto me-3">
+          <li class="nav-item"><a class="nav-link nav-link-nestify" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link nav-link-nestify" href="listings.html">Find PG</a></li>
+          <li class="nav-item"><a class="nav-link nav-link-nestify active" href="map.html">Map View</a></li>
+          <li class="nav-item"><a class="nav-link nav-link-nestify" href="add-listing.html">List Your Space</a></li>
+        </ul>
+        <div class="nav-auth-section">
+          <a href="login.html" class="btn btn-accent btn-sm-custom"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="map-container">
+    <!-- Sidebar -->
+    <div class="map-sidebar">
+      <div class="map-sidebar-header">
+        <h6 class="fw-600 mb-2"><i class="bi bi-geo-alt-fill text-accent me-1"></i> PGs & Rooms</h6>
+        <input type="text" class="form-control-dark" id="sidebarSearch"
+               placeholder="Search by area or name..." style="font-size:0.85rem;padding:0.5rem 0.75rem;">
+        <div class="d-flex gap-1 mt-2">
+          <span class="text-muted-custom fs-sm" id="sidebarCount"></span>
+        </div>
+      </div>
+      <div class="map-sidebar-listings" id="sidebarListings">
+        <div class="text-center py-4">
+          <div class="spinner-border spinner-border-sm text-accent"></div>
+          <p class="text-muted-custom fs-sm mt-2">Loading listings...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map -->
+    <div class="map-view">
+      <!-- Radius selector (shows after Near Me clicked) -->
+      <div class="radius-bar" id="radiusBar">
+        <span class="text-muted-custom fs-sm" style="background:var(--bg-card);padding:0.3rem 0.6rem;border-radius:50px;font-size:0.78rem;border:1px solid var(--border-color);">Radius:</span>
+        <button class="radius-btn active" data-radius="500">500m</button>
+        <button class="radius-btn" data-radius="1000">1 km</button>
+        <button class="radius-btn" data-radius="3000">3 km</button>
+        <button class="radius-btn" data-radius="5000">5 km</button>
+        <button class="radius-btn" id="clearNearMe" style="background:rgba(255,61,61,0.15);color:var(--danger);border-color:var(--danger);">
+          <i class="bi bi-x"></i> Clear
+        </button>
+      </div>
+
+      <!-- Nearby count -->
+      <div class="nearby-count" id="nearbyCount"></div>
+
+      <div id="map"></div>
+
+      <!-- Near Me Button -->
+      <button class="near-me-btn" id="nearMeBtn">
+        <i class="bi bi-geo-alt-fill"></i> Near Me
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/app.js"></script>
+
+  <script type="module">
+    import { getApprovedListings } from './js/firebase-config.js';
+
+    // Init map centered on Pune
+    const map = L.map('map', { center:[18.5204,73.8567], zoom:12, zoomControl:false });
+    L.control.zoom({ position:'bottomleft' }).addTo(map);
+
+    // Dark tile layer
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:19
+    }).addTo(map);
+
+    let allListings = [];
+    let markers = [];
+    let userMarker = null;
+    let radiusCircle = null;
+    let currentRadius = 500;
+    let userLatLng = null;
+    let nearMeActive = false;
+
+    // Orange pin icon
+    const orangeIcon = L.divIcon({
+      className:'',
+      html:`<div class="user-dot"></div>`,
+      iconAnchor:[8,8]
+    });
+
+    // ---- Load listings ----
+    async function loadListings() {
+      try {
+        allListings = await getApprovedListings(100);
+        renderSidebar(allListings);
+        renderMarkers(allListings);
+      } catch(err) {
+        document.getElementById('sidebarListings').innerHTML =
+          `<div class="text-center py-4"><p class="text-muted-custom fs-sm">Failed to load listings.</p></div>`;
+      }
+    }
+
+    // ---- Render sidebar ----
+    function renderSidebar(listings) {
+      const container = document.getElementById('sidebarListings');
+      document.getElementById('sidebarCount').textContent = `${listings.length} listing${listings.length !== 1 ? 's' : ''}`;
+
+      if (listings.length === 0) {
+        container.innerHTML = `<div class="text-center py-4"><i class="bi bi-search" style="font-size:1.5rem;opacity:0.3;"></i><p class="text-muted-custom fs-sm mt-2">No listings found</p></div>`;
+        return;
+      }
+
+      container.innerHTML = listings.map(l => {
+        const img = l.images?.[0] || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=120&h=90&fit=crop';
+        const price = '₹' + Number(l.price || 0).toLocaleString('en-IN');
+        const hasCoords = l.lat && l.lng;
+        return `
+          <div class="map-sidebar-card" id="card-${l.id}" onclick="focusListing('${l.id}')">
+            <img src="${esc(img)}" alt="${esc(l.title)}"
+                 onerror="this.src='https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=120&h=90&fit=crop'">
+            <div class="map-sidebar-card-info">
+              <h6>${esc(l.title)}</h6>
+              <p class="location"><i class="bi bi-geo-alt-fill text-accent"></i> ${esc(l.location || '')}</p>
+              <span class="price">${price}/mo</span>
+              ${!hasCoords ? '<br><small style="color:var(--text-muted);font-size:0.7rem;"><i class="bi bi-exclamation-circle"></i> No map pin</small>' : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // ---- Render markers ----
+    function renderMarkers(listings) {
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+
+      listings.forEach(l => {
+        if (!l.lat || !l.lng) return;
+        const price = '₹' + Number(l.price || 0).toLocaleString('en-IN');
+        const img = l.images?.[0] || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=220&h=110&fit=crop';
+
+        const icon = L.divIcon({
+          className:'',
+          html:`<div class="custom-marker">${price}</div>`,
+          iconAnchor:[30,30]
+        });
+
+        const m = L.marker([l.lat, l.lng], { icon }).addTo(map);
+
+        m.bindPopup(`
+          <img src="${esc(img)}" class="map-popup-img"
+               onerror="this.src='https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=220&h=110&fit=crop'">
+          <div class="map-popup-body">
+            <h6>${esc(l.title)}</h6>
+            <p><i style="color:#ff6b00" class="bi bi-geo-alt-fill"></i> ${esc(l.location || '')}, ${esc(l.city || '')}</p>
+            <span class="price">${price}/mo</span>
+            <a href="detail.html?id=${l.id}">View Details →</a>
+          </div>`, { maxWidth:220, minWidth:220 });
+
+        m.on('click', () => {
+          highlightCard(l.id);
+          scrollToCard(l.id);
+        });
+
+        markers.push(m);
+      });
+
+      if (markers.length > 0 && !nearMeActive) {
+        const group = L.featureGroup(markers);
+        map.fitBounds(group.getBounds().pad(0.1));
+      }
+    }
+
+    // ---- Focus listing from sidebar ----
+    window.focusListing = function(id) {
+      const l = allListings.find(x => x.id === id);
+      if (!l) return;
+      highlightCard(id);
+      if (l.lat && l.lng) {
+        map.setView([l.lat, l.lng], 16, { animate:true });
+        const idx = allListings.filter(x => x.lat && x.lng).findIndex(x => x.id === id);
+        if (markers[idx]) markers[idx].openPopup();
+      }
+    };
+
+    function highlightCard(id) {
+      document.querySelectorAll('.map-sidebar-card').forEach(c => c.classList.remove('active'));
+      document.getElementById(`card-${id}`)?.classList.add('active');
+    }
+    function scrollToCard(id) {
+      document.getElementById(`card-${id}`)?.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    }
+
+    // ---- Search filter ----
+    document.getElementById('sidebarSearch').addEventListener('input', e => {
+      const q = e.target.value.toLowerCase();
+      let results = q ? allListings.filter(l =>
+        `${l.title} ${l.location} ${l.city} ${l.type}`.toLowerCase().includes(q)
+      ) : allListings;
+      if (nearMeActive && userLatLng) results = filterByRadius(results, userLatLng, currentRadius);
+      renderSidebar(results);
+      renderMarkers(results);
+    });
+
+    // ---- NEAR ME feature ----
+    const nearMeBtn = document.getElementById('nearMeBtn');
+    const radiusBar = document.getElementById('radiusBar');
+    const nearbyCount = document.getElementById('nearbyCount');
+
+    nearMeBtn.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        if (window.showToast) window.showToast('Geolocation not supported on this device.', 'error');
+        return;
+      }
+
+      nearMeBtn.disabled = true;
+      nearMeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Locating...';
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          userLatLng = [pos.coords.latitude, pos.coords.longitude];
+          nearMeActive = true;
+
+          // Show user location dot
+          if (userMarker) map.removeLayer(userMarker);
+          const userDotIcon = L.divIcon({
+            className:'',
+            html:`<div class="user-dot"></div>`,
+            iconAnchor:[8,8]
+          });
+          userMarker = L.marker(userLatLng, { icon: userDotIcon }).addTo(map);
+          userMarker.bindTooltip('You are here', { permanent:false });
+
+          // Draw radius circle
+          applyRadius(currentRadius);
+
+          // Show UI
+          radiusBar.classList.add('show');
+          nearMeBtn.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Near Me';
+          nearMeBtn.disabled = false;
+          nearMeBtn.style.background = 'var(--success)';
+        },
+        (err) => {
+          nearMeBtn.disabled = false;
+          nearMeBtn.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Near Me';
+          let msg = 'Could not get location.';
+          if (err.code === 1) msg = 'Location permission denied. Please allow location access.';
+          if (window.showToast) window.showToast(msg, 'error');
+        },
+        { enableHighAccuracy:true, timeout:10000 }
+      );
+    });
+
+    // Radius buttons
+    document.querySelectorAll('.radius-btn[data-radius]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.radius-btn[data-radius]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentRadius = parseInt(btn.dataset.radius);
+        if (userLatLng) applyRadius(currentRadius);
+      });
+    });
+
+    function applyRadius(radiusM) {
+      // Remove old circle
+      if (radiusCircle) map.removeLayer(radiusCircle);
+
+      // Draw new orange circle
+      radiusCircle = L.circle(userLatLng, {
+        radius: radiusM,
+        color: '#ff6b00',
+        fillColor: '#ff6b00',
+        fillOpacity: 0.08,
+        weight: 2,
+        dashArray: '6 4'
+      }).addTo(map);
+
+      // Fit map to circle
+      map.fitBounds(radiusCircle.getBounds(), { padding:[30,30] });
+
+      // Filter listings by radius
+      const nearby = filterByRadius(allListings, userLatLng, radiusM);
+      renderSidebar(nearby);
+      renderMarkers(nearby);
+
+      // Show count badge
+      nearbyCount.textContent = `${nearby.length} listing${nearby.length !== 1 ? 's' : ''} within ${radiusM >= 1000 ? (radiusM/1000)+'km' : radiusM+'m'}`;
+      nearbyCount.style.display = 'block';
+    }
+
+    // Haversine distance in meters
+    function getDistanceM(lat1, lng1, lat2, lng2) {
+      const R = 6371000;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+                Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*
+                Math.sin(dLng/2)*Math.sin(dLng/2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function filterByRadius(listings, [uLat, uLng], radiusM) {
+      return listings.filter(l => {
+        if (!l.lat || !l.lng) return false;
+        return getDistanceM(uLat, uLng, l.lat, l.lng) <= radiusM;
+      });
+    }
+
+    // Clear Near Me
+    document.getElementById('clearNearMe').addEventListener('click', () => {
+      nearMeActive = false;
+      userLatLng = null;
+      if (userMarker) { map.removeLayer(userMarker); userMarker = null; }
+      if (radiusCircle) { map.removeLayer(radiusCircle); radiusCircle = null; }
+      radiusBar.classList.remove('show');
+      nearbyCount.style.display = 'none';
+      nearMeBtn.style.background = 'var(--accent)';
+      nearMeBtn.innerHTML = '<i class="bi bi-geo-alt-fill"></i> Near Me';
+      renderSidebar(allListings);
+      renderMarkers(allListings);
+      document.getElementById('sidebarSearch').value = '';
+    });
+
+    function esc(t) {
+      if (!t) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+
+    loadListings();
+  </script>
+</body>
+</html>

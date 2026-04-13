@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Listing — Nestify</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    #locationMap { height:240px; border-radius:var(--radius-md); border:1px solid var(--border-color); }
+    .coords-display { display:none; background:var(--bg-input); border-radius:var(--radius-sm); padding:0.4rem 0.8rem; font-size:0.82rem; color:var(--accent); margin-top:0.5rem; }
+    .map-hint { font-size:0.8rem; color:var(--text-muted); margin-top:0.4rem; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-nestify" id="mainNavbar">
+    <div class="container-fluid px-3">
+      <a class="navbar-brand navbar-brand-nestify" href="index.html"><i class="bi bi-house-heart-fill"></i> NEST<span>IFY</span></a>
+      <div class="ms-auto nav-auth-section"></div>
+    </div>
+  </nav>
+
+  <div class="dashboard-layout">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-2 col-md-3 p-0">
+          <div class="dashboard-sidebar">
+            <nav class="dashboard-sidebar-nav">
+              <a href="client-dashboard.html" class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+              <a href="add-listing.html" class="sidebar-link active"><i class="bi bi-plus-circle"></i> Add Listing</a>
+              <a href="my-listings.html" class="sidebar-link"><i class="bi bi-building"></i> My Listings</a>
+              <a href="#" class="sidebar-link"><i class="bi bi-chat-dots"></i> Leads</a>
+              <a href="#" class="sidebar-link"><i class="bi bi-bar-chart"></i> Analytics</a>
+              <a href="#" class="sidebar-link"><i class="bi bi-gear"></i> Settings</a>
+            </nav>
+          </div>
+        </div>
+
+        <div class="col-lg-10 col-md-9">
+          <div class="dashboard-content">
+            <div class="mb-4">
+              <h3 class="fw-700 mb-1">Add New Listing</h3>
+              <p class="text-muted-custom fs-sm">Fill in the details below to list your property</p>
+            </div>
+
+            <form id="addListingForm">
+              <div class="row g-4">
+                <div class="col-lg-8">
+
+                  <!-- Basic Info -->
+                  <div class="form-card">
+                    <h5 class="form-card-title"><i class="bi bi-info-circle"></i> Basic Information</h5>
+                    <div class="row g-3">
+                      <div class="col-12">
+                        <label class="form-label-dark">Property Title *</label>
+                        <input type="text" id="title" class="form-control-dark" placeholder="e.g., Sunshine PG for Boys near IT Park" required>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label-dark">Property Type *</label>
+                        <select id="type" class="form-select-dark" required>
+                          <option value="">Select Type</option>
+                          <option value="PG">PG</option>
+                          <option value="Room">Room</option>
+                        </select>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label-dark">Category *</label>
+                        <select id="category" class="form-select-dark" required>
+                          <option value="">Select Category</option>
+                          <option value="boys">Boys</option>
+                          <option value="girls">Girls</option>
+                          <option value="coliving">Co-Living</option>
+                        </select>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label-dark">Monthly Rent (₹) *</label>
+                        <input type="number" id="price" class="form-control-dark" placeholder="e.g., 8500" required>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label-dark">Security Deposit (₹)</label>
+                        <input type="number" id="securityDeposit" class="form-control-dark" placeholder="e.g., 8500">
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label-dark">Description *</label>
+                        <textarea id="description" class="form-control-dark" rows="4" placeholder="Describe your property in detail..." required></textarea>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Location -->
+                  <div class="form-card">
+                    <h5 class="form-card-title"><i class="bi bi-geo-alt"></i> Location Details</h5>
+                    <div class="row g-3">
+                      <div class="col-12">
+                        <label class="form-label-dark">Full Address *</label>
+                        <input type="text" id="address" class="form-control-dark" placeholder="e.g., 42, Karve Road, Near Deccan" required>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label-dark">Area / Locality *</label>
+                        <input type="text" id="location" class="form-control-dark" placeholder="e.g., Kothrud" required>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label-dark">City *</label>
+                        <select id="city" class="form-select-dark">
+                          <option value="Pune">Pune</option>
+                          <option value="Mumbai">Mumbai</option>
+                          <option value="Bangalore">Bangalore</option>
+                          <option value="Delhi">Delhi</option>
+                        </select>
+                      </div>
+                      <input type="hidden" id="lat">
+                      <input type="hidden" id="lng">
+                      <div class="col-12">
+                        <label class="form-label-dark">Pin Your Location on Map</label>
+                        <div id="locationMap"></div>
+                        <p class="map-hint"><i class="bi bi-hand-index text-accent"></i> Click on the map to drop a pin on your property location</p>
+                        <div class="coords-display" id="coordsDisplay">
+                          <i class="bi bi-geo-alt-fill me-1"></i> <span id="coordsText"></span>
+                          <span class="ms-2 text-muted-custom fs-xs">✓ Location pinned</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Images -->
+                  <div class="form-card">
+                    <h5 class="form-card-title"><i class="bi bi-images"></i> Property Images</h5>
+                    <div class="image-upload-zone" id="imageUploadZone">
+                      <i class="bi bi-cloud-arrow-up d-block"></i>
+                      <h5>Drop images here or click to upload</h5>
+                      <p>Upload up to 10 images (JPG, PNG, max 5MB each)</p>
+                      <input type="file" multiple accept="image/*" style="display:none;" id="imageInput">
+                    </div>
+                    <div class="image-preview-grid" id="imagePreviewGrid"></div>
+                  </div>
+
+                  <!-- Amenities -->
+                  <div class="form-card">
+                    <h5 class="form-card-title"><i class="bi bi-grid"></i> Amenities</h5>
+                    <div class="amenity-toggle-group" id="amenityGroup">
+                      <button type="button" class="amenity-toggle" data-amenity="WiFi"><i class="bi bi-wifi"></i> WiFi</button>
+                      <button type="button" class="amenity-toggle" data-amenity="AC"><i class="bi bi-snow"></i> AC</button>
+                      <button type="button" class="amenity-toggle" data-amenity="Meals"><i class="bi bi-egg-fried"></i> Meals</button>
+                      <button type="button" class="amenity-toggle" data-amenity="Attached Bath"><i class="bi bi-droplet"></i> Attached Bath</button>
+                      <button type="button" class="amenity-toggle" data-amenity="TV"><i class="bi bi-tv"></i> TV</button>
+                      <button type="button" class="amenity-toggle" data-amenity="Security"><i class="bi bi-shield-check"></i> Security</button>
+                      <button type="button" class="amenity-toggle" data-amenity="Parking"><i class="bi bi-car-front"></i> Parking</button>
+                      <button type="button" class="amenity-toggle" data-amenity="RO Water"><i class="bi bi-water"></i> RO Water</button>
+                      <button type="button" class="amenity-toggle" data-amenity="Power Backup"><i class="bi bi-lightning"></i> Power Backup</button>
+                      <button type="button" class="amenity-toggle" data-amenity="Housekeeping"><i class="bi bi-house-door"></i> Housekeeping</button>
+                      <button type="button" class="amenity-toggle" data-amenity="Gym"><i class="bi bi-bicycle"></i> Gym</button>
+                      <button type="button" class="amenity-toggle" data-amenity="Laundry"><i class="bi bi-box"></i> Laundry</button>
+                      <button type="button" class="amenity-toggle" data-amenity="Geyser"><i class="bi bi-thermometer-half"></i> Geyser</button>
+                      <button type="button" class="amenity-toggle" data-amenity="Kitchen"><i class="bi bi-cup-hot"></i> Kitchen</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right col -->
+                <div class="col-lg-4">
+                  <div class="form-card">
+                    <h5 class="form-card-title"><i class="bi bi-door-open"></i> Room Details</h5>
+                    <div class="row g-3">
+                      <div class="col-12">
+                        <label class="form-label-dark">Bathroom Type *</label>
+                        <select id="bathroom" class="form-select-dark" required>
+                          <option value="">Select</option>
+                          <option value="attached">Attached</option>
+                          <option value="shared">Shared</option>
+                        </select>
+                      </div>
+                      <div class="col-12">
+                        <div class="form-check-dark form-check mb-2">
+                          <input class="form-check-input" type="checkbox" id="foodCheck">
+                          <label class="form-check-label" for="foodCheck">Food Included</label>
+                        </div>
+                        <div class="form-check-dark form-check">
+                          <input class="form-check-input" type="checkbox" id="acCheck">
+                          <label class="form-check-label" for="acCheck">AC Available</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-card">
+                    <h5 class="form-card-title"><i class="bi bi-telephone"></i> Contact Info</h5>
+                    <label class="form-label-dark">WhatsApp Number *</label>
+                    <input type="tel" id="ownerPhone" class="form-control-dark" placeholder="+91 98765 43210" required>
+                  </div>
+
+                  <div class="form-card text-center">
+                    <p class="fs-sm text-muted-custom mb-3">
+                      <i class="bi bi-info-circle text-accent"></i>
+                      Reviewed & approved within 24 hours
+                    </p>
+                    <button type="submit" id="submitBtn" class="btn btn-accent w-100" style="padding:0.8rem;">
+                      <i class="bi bi-check-lg"></i> Submit Listing
+                    </button>
+                    <button type="button" id="draftBtn" class="btn btn-dark-custom w-100 mt-2">
+                      <i class="bi bi-save"></i> Save as Draft
+                    </button>
+                    <div id="formError" style="display:none;margin-top:1rem;background:rgba(255,61,61,0.15);border:1px solid rgba(255,61,61,0.4);color:#ff6b6b;padding:0.75rem;border-radius:10px;font-size:0.85rem;text-align:left;"></div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/app.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCB3n4oRMttZP3hEstN1WhQIUSfnMcNK3o",
+      authDomain: "stayfinder-india.firebaseapp.com",
+      projectId: "stayfinder-india",
+      storageBucket: "stayfinder-india.firebasestorage.app",
+      messagingSenderId: "645510509071",
+      appId: "1:645510509071:web:d9924d4780d3f185a5e97a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null, currentUserData = null;
+    let uploadedImages = [], pickedLat = null, pickedLng = null;
+
+    // Auth
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = 'login.html'; return; }
+      currentUser = user;
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.exists()) currentUserData = snap.data();
+      } catch(e) {}
+    });
+
+    // Leaflet Map
+    const map = L.map('locationMap', { center: [18.5204, 73.8567], zoom: 12 });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap © CARTO', subdomains: 'abcd', maxZoom: 19
+    }).addTo(map);
+
+    let pinMarker = null;
+    const pinIcon = L.divIcon({
+      className: '',
+      html: `<div style="background:#ff6b00;width:18px;height:18px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 10px rgba(255,107,0,0.7);"></div>`,
+      iconAnchor: [9, 9]
+    });
+
+    map.on('click', (e) => {
+      pickedLat = parseFloat(e.latlng.lat.toFixed(6));
+      pickedLng = parseFloat(e.latlng.lng.toFixed(6));
+      document.getElementById('lat').value = pickedLat;
+      document.getElementById('lng').value = pickedLng;
+
+      if (pinMarker) pinMarker.setLatLng(e.latlng);
+      else pinMarker = L.marker(e.latlng, { icon: pinIcon }).addTo(map);
+
+      document.getElementById('coordsText').textContent = `${pickedLat}, ${pickedLng}`;
+      document.getElementById('coordsDisplay').style.display = 'block';
+    });
+
+    // Image upload
+    const imageInput = document.getElementById('imageInput');
+    const previewGrid = document.getElementById('imagePreviewGrid');
+    document.getElementById('imageUploadZone').addEventListener('click', () => imageInput.click());
+
+    imageInput.addEventListener('change', function() {
+      [...this.files].forEach(file => {
+        if (uploadedImages.length >= 10) { showFormError('Max 10 images.'); return; }
+        if (file.size > 5*1024*1024) { showFormError(file.name + ' too large (max 5MB).'); return; }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          uploadedImages.push(e.target.result);
+          const idx = uploadedImages.length - 1;
+          const item = document.createElement('div');
+          item.className = 'image-preview-item';
+          item.innerHTML = `<img src="${e.target.result}" alt=""><button class="remove-btn" type="button"><i class="bi bi-x"></i></button>`;
+          item.querySelector('.remove-btn').onclick = () => {
+            uploadedImages.splice(idx, 1);
+            item.remove();
+          };
+          previewGrid.appendChild(item);
+        };
+        reader.readAsDataURL(file);
+      });
+      this.value = '';
+    });
+
+    // Amenity toggles
+    document.querySelectorAll('#amenityGroup .amenity-toggle').forEach(btn => {
+      btn.addEventListener('click', () => btn.classList.toggle('active'));
+    });
+
+    function getAmenities() {
+      return [...document.querySelectorAll('#amenityGroup .amenity-toggle.active')].map(b => b.dataset.amenity);
+    }
+
+    function validate() {
+      const fields = [
+        ['title','Property Title'],['type','Property Type'],['category','Category'],
+        ['price','Monthly Rent'],['description','Description'],['address','Full Address'],
+        ['location','Area / Locality'],['bathroom','Bathroom Type'],['ownerPhone','WhatsApp Number']
+      ];
+      for (const [id, label] of fields) {
+        const el = document.getElementById(id);
+        if (!el?.value?.trim()) { showFormError('Please fill: ' + label); el?.focus(); return false; }
+      }
+      return true;
+    }
+
+    function showFormError(msg) {
+      const el = document.getElementById('formError');
+      el.innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i>${msg}`;
+      el.style.display = 'block';
+      el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    }
+    function hideFormError() { document.getElementById('formError').style.display = 'none'; }
+
+    function setLoading(on) {
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = on;
+      btn.innerHTML = on ? '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...' : '<i class="bi bi-check-lg"></i> Submit Listing';
+    }
+
+    async function saveListing(status) {
+      if (!currentUser) { showFormError('Please login first.'); return; }
+      if (!validate()) return;
+      hideFormError();
+      setLoading(true);
+      try {
+        await addDoc(collection(db, "listings"), {
+          title:           document.getElementById('title').value.trim(),
+          type:            document.getElementById('type').value,
+          category:        document.getElementById('category').value,
+          price:           Number(document.getElementById('price').value),
+          securityDeposit: Number(document.getElementById('securityDeposit').value) || 0,
+          description:     document.getElementById('description').value.trim(),
+          address:         document.getElementById('address').value.trim(),
+          location:        document.getElementById('location').value.trim(),
+          city:            document.getElementById('city').value,
+          lat:             pickedLat,
+          lng:             pickedLng,
+          bathroom:        document.getElementById('bathroom').value,
+          foodIncluded:    document.getElementById('foodCheck').checked,
+          ac:              document.getElementById('acCheck').checked,
+          amenities:       getAmenities(),
+          ownerPhone:      document.getElementById('ownerPhone').value.trim(),
+          ownerName:       currentUserData?.name || currentUser.displayName || 'Owner',
+          ownerId:         currentUser.uid,
+          ownerEmail:      currentUser.email,
+          images:          uploadedImages,
+          status,
+          verified: false, featured: false, viewsCount: 0, leadsCount: 0,
+          createdAt: serverTimestamp()
+        });
+        if (window.showToast) window.showToast(
+          status === 'draft' ? 'Saved as draft!' : 'Submitted! Pending admin approval.', 'success'
+        );
+        setTimeout(() => window.location.href = 'my-listings.html', 1500);
+      } catch(err) {
+        showFormError('Error: ' + err.message);
+        setLoading(false);
+      }
+    }
+
+    document.getElementById('addListingForm').addEventListener('submit', e => { e.preventDefault(); saveListing('pending'); });
+    document.getElementById('draftBtn').addEventListener('click', () => saveListing('draft'));
+  </script>
+</body>
+</html>

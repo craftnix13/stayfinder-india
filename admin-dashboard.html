@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Nestify</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-nestify" id="mainNavbar">
+    <div class="container-fluid px-3">
+      <a class="navbar-brand navbar-brand-nestify" href="index.html">
+        <i class="bi bi-house-heart-fill"></i> NEST<span>IFY</span>
+      </a>
+      <span class="badge bg-danger ms-2" style="font-size:0.7rem;">ADMIN</span>
+      <div class="ms-auto nav-auth-section"></div>
+    </div>
+  </nav>
+
+  <div class="dashboard-layout">
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3 p-0">
+          <div class="dashboard-sidebar">
+            <nav class="dashboard-sidebar-nav">
+              <a href="admin-dashboard.html" class="sidebar-link active"><i class="bi bi-speedometer2"></i> Dashboard</a>
+              <a href="manage-listings.html" class="sidebar-link"><i class="bi bi-building"></i> Manage Listings</a>
+              <a href="manage-users.html" class="sidebar-link"><i class="bi bi-people"></i> Manage Users</a>
+              <a href="#" class="sidebar-link"><i class="bi bi-star"></i> Reviews</a>
+              <a href="#" class="sidebar-link"><i class="bi bi-bar-chart"></i> Analytics</a>
+              <a href="#" class="sidebar-link"><i class="bi bi-gear"></i> Settings</a>
+            </nav>
+          </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+          <div class="dashboard-content">
+            <div class="mb-4">
+              <h3 class="fw-700 mb-1">Admin Dashboard</h3>
+              <p class="text-muted-custom fs-sm">Platform overview and management</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="row g-4 mb-4">
+              <div class="col-xl-2 col-md-4 col-6">
+                <div class="stat-card">
+                  <div class="stat-icon orange"><i class="bi bi-building"></i></div>
+                  <div class="stat-info"><h3 id="statTotal">—</h3><p>Total Listings</p></div>
+                </div>
+              </div>
+              <div class="col-xl-2 col-md-4 col-6">
+                <div class="stat-card">
+                  <div class="stat-icon green"><i class="bi bi-check-circle"></i></div>
+                  <div class="stat-info"><h3 id="statApproved">—</h3><p>Approved</p></div>
+                </div>
+              </div>
+              <div class="col-xl-2 col-md-4 col-6">
+                <div class="stat-card">
+                  <div class="stat-icon yellow"><i class="bi bi-clock"></i></div>
+                  <div class="stat-info"><h3 id="statPending">—</h3><p>Pending</p></div>
+                </div>
+              </div>
+              <div class="col-xl-2 col-md-4 col-6">
+                <div class="stat-card">
+                  <div class="stat-icon blue"><i class="bi bi-people"></i></div>
+                  <div class="stat-info"><h3 id="statUsers">—</h3><p>Total Users</p></div>
+                </div>
+              </div>
+              <div class="col-xl-2 col-md-4 col-6">
+                <div class="stat-card">
+                  <div class="stat-icon blue"><i class="bi bi-eye"></i></div>
+                  <div class="stat-info"><h3 id="statViews">—</h3><p>Total Views</p></div>
+                </div>
+              </div>
+              <div class="col-xl-2 col-md-4 col-6">
+                <div class="stat-card">
+                  <div class="stat-icon red"><i class="bi bi-x-circle"></i></div>
+                  <div class="stat-info"><h3 id="statRejected">—</h3><p>Rejected</p></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pending Approvals -->
+            <div class="detail-content-card mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="form-card-title mb-0"><i class="bi bi-clock-history text-warning"></i> Pending Approvals</h5>
+                <a href="manage-listings.html" class="text-accent fs-sm">View All <i class="bi bi-arrow-right"></i></a>
+              </div>
+              <div id="pendingLoading" class="text-center py-4">
+                <div class="spinner-border spinner-border-sm text-accent"></div>
+              </div>
+              <div id="pendingTable" style="display:none;">
+                <div class="table-dark-custom">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Property</th>
+                        <th>Owner</th>
+                        <th>Type</th>
+                        <th>Price</th>
+                        <th>Submitted</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="pendingTbody"></tbody>
+                  </table>
+                </div>
+              </div>
+              <div id="pendingEmpty" style="display:none;" class="text-center py-4">
+                <i class="bi bi-check-circle text-success" style="font-size:2rem;"></i>
+                <p class="text-muted-custom mt-2 fs-sm">No pending listings — all caught up!</p>
+              </div>
+            </div>
+
+            <!-- Recent Users -->
+            <div class="detail-content-card">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="form-card-title mb-0"><i class="bi bi-people"></i> Recent Users</h5>
+                <a href="manage-users.html" class="text-accent fs-sm">View All <i class="bi bi-arrow-right"></i></a>
+              </div>
+              <div id="usersLoading" class="text-center py-4">
+                <div class="spinner-border spinner-border-sm text-accent"></div>
+              </div>
+              <div id="usersTable" style="display:none;">
+                <div class="table-dark-custom">
+                  <table>
+                    <thead>
+                      <tr><th>User</th><th>Email</th><th>Role</th><th>Listings</th></tr>
+                    </thead>
+                    <tbody id="usersTbody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, deleteDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCB3n4oRMttZP3hEstN1WhQIUSfnMcNK3o",
+      authDomain: "stayfinder-india.firebaseapp.com",
+      projectId: "stayfinder-india",
+      storageBucket: "stayfinder-india.firebasestorage.app",
+      messagingSenderId: "645510509071",
+      appId: "1:645510509071:web:d9924d4780d3f185a5e97a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = 'login.html'; return; }
+      // Check admin role
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (!snap.exists() || snap.data().role !== 'admin') {
+        window.location.href = 'index.html'; return;
+      }
+      loadDashboard();
+    });
+
+    async function loadDashboard() {
+      try {
+        // Load all listings
+        const listingsSnap = await getDocs(collection(db, "listings"));
+        const listings = listingsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        const total    = listings.length;
+        const approved = listings.filter(l => l.status === 'approved').length;
+        const pending  = listings.filter(l => l.status === 'pending').length;
+        const rejected = listings.filter(l => l.status === 'rejected').length;
+        const views    = listings.reduce((s, l) => s + (l.viewsCount || 0), 0);
+
+        document.getElementById('statTotal').textContent    = total;
+        document.getElementById('statApproved').textContent = approved;
+        document.getElementById('statPending').textContent  = pending;
+        document.getElementById('statRejected').textContent = rejected;
+        document.getElementById('statViews').textContent    = views.toLocaleString('en-IN');
+
+        // Pending listings table
+        const pendingListings = listings
+          .filter(l => l.status === 'pending')
+          .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0));
+
+        document.getElementById('pendingLoading').style.display = 'none';
+
+        if (pendingListings.length === 0) {
+          document.getElementById('pendingEmpty').style.display = 'block';
+        } else {
+          document.getElementById('pendingTable').style.display = 'block';
+          renderPendingTable(pendingListings);
+        }
+
+        // Load users
+        const usersSnap = await getDocs(collection(db, "users"));
+        const users = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        document.getElementById('statUsers').textContent = users.length;
+
+        document.getElementById('usersLoading').style.display = 'none';
+        document.getElementById('usersTable').style.display = 'block';
+
+        // Count listings per user
+        const listingCountByUser = {};
+        listings.forEach(l => {
+          listingCountByUser[l.ownerId] = (listingCountByUser[l.ownerId] || 0) + 1;
+        });
+
+        // Recent 5 users
+        const recentUsers = users
+          .sort((a, b) => (b.createdAt?.toDate?.() || 0) - (a.createdAt?.toDate?.() || 0))
+          .slice(0, 5);
+
+        document.getElementById('usersTbody').innerHTML = recentUsers.map(u => `
+          <tr>
+            <td>
+              <div class="table-user-info">
+                <img src="${u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name||'U')}&background=ff6b00&color=fff&size=36`}"
+                     style="width:36px;height:36px;border-radius:50%;object-fit:cover;" alt=""
+                     onerror="this.src='https://ui-avatars.com/api/?name=U&background=ff6b00&color=fff&size=36'">
+                <div><h6>${esc(u.name || 'Unknown')}</h6></div>
+              </div>
+            </td>
+            <td class="text-muted-custom fs-sm">${esc(u.email || '—')}</td>
+            <td><span class="role-badge ${u.role === 'admin' ? 'admin' : u.role === 'client' ? 'client' : 'user'}">${esc(u.role || 'user')}</span></td>
+            <td>${listingCountByUser[u.id] || 0}</td>
+          </tr>`).join('');
+
+      } catch(err) {
+        console.error(err);
+        if (window.showToast) window.showToast('Failed to load data: ' + err.message, 'error');
+      }
+    }
+
+    function renderPendingTable(listings) {
+      const tbody = document.getElementById('pendingTbody');
+      tbody.innerHTML = listings.map(l => {
+        const img = l.images?.[0] || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=60&h=60&fit=crop';
+        const price = '₹' + Number(l.price || 0).toLocaleString('en-IN');
+        const timeAgo = getTimeAgo(l.createdAt?.toDate?.());
+        return `
+          <tr id="row-${l.id}">
+            <td>
+              <div class="table-user-info">
+                <img src="${esc(img)}" style="border-radius:6px;width:52px;height:42px;object-fit:cover;"
+                     onerror="this.src='https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=60&h=60&fit=crop'" alt="">
+                <div>
+                  <h6>${esc(l.title)}</h6>
+                  <p>${esc(l.location || '')}, ${esc(l.city || '')}</p>
+                </div>
+              </div>
+            </td>
+            <td class="fs-sm text-muted-custom">${esc(l.ownerName || '—')}</td>
+            <td><span class="badge-type">${esc(l.type || 'PG')}</span></td>
+            <td class="fw-600">${price}</td>
+            <td class="text-muted-custom fs-sm">${timeAgo}</td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                <a href="detail.html?id=${l.id}" class="btn-icon" title="View"><i class="bi bi-eye"></i></a>
+                <button class="btn btn-accent btn-sm-custom approve-btn"
+                        style="padding:0.3rem 0.8rem;font-size:0.8rem;" data-id="${l.id}">
+                  <i class="bi bi-check-lg"></i> Approve
+                </button>
+                <button class="btn btn-dark-custom btn-sm-custom reject-btn"
+                        style="padding:0.3rem 0.8rem;font-size:0.8rem;color:var(--danger);border-color:var(--danger);" data-id="${l.id}">
+                  <i class="bi bi-x-lg"></i> Reject
+                </button>
+              </div>
+            </td>
+          </tr>`;
+      }).join('');
+
+      // Approve buttons
+      tbody.querySelectorAll('.approve-btn').forEach(btn => {
+        btn.addEventListener('click', () => updateListingStatus(btn.dataset.id, 'approved'));
+      });
+      // Reject buttons
+      tbody.querySelectorAll('.reject-btn').forEach(btn => {
+        btn.addEventListener('click', () => updateListingStatus(btn.dataset.id, 'rejected'));
+      });
+    }
+
+    async function updateListingStatus(listingId, status) {
+      try {
+        await updateDoc(doc(db, "listings", listingId), { status });
+        // Remove row from pending table
+        const row = document.getElementById(`row-${listingId}`);
+        if (row) row.remove();
+
+        // Update pending count
+        const current = parseInt(document.getElementById('statPending').textContent) || 0;
+        document.getElementById('statPending').textContent = Math.max(0, current - 1);
+
+        if (status === 'approved') {
+          const curr = parseInt(document.getElementById('statApproved').textContent) || 0;
+          document.getElementById('statApproved').textContent = curr + 1;
+        } else {
+          const curr = parseInt(document.getElementById('statRejected').textContent) || 0;
+          document.getElementById('statRejected').textContent = curr + 1;
+        }
+
+        // Check if table is now empty
+        if (document.getElementById('pendingTbody').children.length === 0) {
+          document.getElementById('pendingTable').style.display = 'none';
+          document.getElementById('pendingEmpty').style.display = 'block';
+        }
+
+        if (window.showToast) window.showToast(
+          status === 'approved' ? 'Listing approved! Now visible on site.' : 'Listing rejected.',
+          status === 'approved' ? 'success' : 'warning'
+        );
+      } catch(err) {
+        if (window.showToast) window.showToast('Failed: ' + err.message, 'error');
+      }
+    }
+
+    function getTimeAgo(date) {
+      if (!date) return '—';
+      const diff = Date.now() - date.getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 60) return `${mins} min ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs} hour${hrs > 1 ? 's' : ''} ago`;
+      const days = Math.floor(hrs / 24);
+      return `${days} day${days > 1 ? 's' : ''} ago`;
+    }
+
+    function esc(t) {
+      if (!t) return '';
+      const d = document.createElement('div');
+      d.textContent = String(t);
+      return d.innerHTML;
+    }
+  </script>
+</body>
+</html>

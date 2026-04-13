@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nestify — Find PG & Rooms in Pune</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+</head>
+<body>
+
+  <!-- ========== NAVBAR ========== -->
+  <nav class="navbar navbar-expand-lg navbar-nestify" id="mainNavbar">
+    <div class="container">
+      <a class="navbar-brand navbar-brand-nestify" href="index.html">
+        <i class="bi bi-house-heart-fill"></i>
+        NEST<span>IFY</span>
+      </a>
+      <button class="navbar-toggler navbar-toggler-nestify" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto me-3">
+          <li class="nav-item">
+            <a class="nav-link nav-link-nestify active" href="index.html">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-nestify" href="listings.html">Find PG</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-nestify" href="map.html">Map View</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link nav-link-nestify" href="add-listing.html">List Your Space</a>
+          </li>
+        </ul>
+        <div class="nav-auth-section" id="navAuth">
+          <a href="login.html" class="btn btn-accent btn-sm-custom">
+            <i class="bi bi-box-arrow-in-right"></i> Login
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ========== HERO SECTION ========== -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-lg-6" style="position:relative;z-index:2;">
+          <div class="hero-badge">
+            <i class="bi bi-stars"></i>
+            #1 PG Finder Platform in Pune
+          </div>
+          <h1 class="hero-title">
+            Find Your Perfect <span class="highlight">PG & Room</span> in Pune
+          </h1>
+          <p class="hero-subtitle">
+            Discover verified PGs, shared rooms, and co-living spaces near your college or workplace. Trusted by 10,000+ students and professionals.
+          </p>
+          <div class="hero-search-box">
+            <i class="bi bi-geo-alt-fill text-accent ms-3"></i>
+            <input type="text" placeholder="Search by area, landmark or PG name..." id="heroSearchInput">
+            <button class="btn btn-accent" id="heroSearchBtn">
+              <i class="bi bi-search"></i> Search
+            </button>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat-item">
+              <h3>5,000+</h3>
+              <p>Verified PGs</p>
+            </div>
+            <div class="hero-stat-item">
+              <h3>50+</h3>
+              <p>Areas in Pune</p>
+            </div>
+            <div class="hero-stat-item">
+              <h3>10K+</h3>
+              <p>Happy Tenants</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6 hero-image-section d-none d-lg-block">
+          <div class="hero-image-card" style="max-width:420px;margin-left:auto;">
+            <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&h=400&fit=crop" alt="Modern Room">
+            <div class="hero-image-card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h5>Sunshine PG for Boys</h5>
+                  <p><i class="bi bi-geo-alt-fill text-accent"></i> Kothrud, Pune</p>
+                </div>
+                <div class="text-end">
+                  <span class="listing-card-price">₹7,500<span>/mo</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="hero-floating-card top-card">
+            <div class="icon-circle"><i class="bi bi-shield-check"></i></div>
+            <div class="info">
+              <h6>Verified Property</h6>
+              <p>Physically inspected</p>
+            </div>
+          </div>
+          <div class="hero-floating-card bottom-card">
+            <div class="icon-circle"><i class="bi bi-star-fill"></i></div>
+            <div class="info">
+              <h6>4.8 Rating</h6>
+              <p>2,000+ reviews</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FEATURED LISTINGS — NOW DYNAMIC ========== -->
+  <section class="section-padding" id="featuredListings">
+    <div class="container">
+      <div class="section-header d-flex justify-content-between align-items-end flex-wrap gap-3">
+        <div>
+          <div class="section-tag"><i class="bi bi-fire"></i> TRENDING NOW</div>
+          <h2 class="section-title">Featured PGs & Rooms</h2>
+          <p class="section-subtitle">Hand-picked verified listings curated just for you</p>
+        </div>
+        <a href="listings.html" class="btn btn-accent-outline btn-sm-custom">
+          View All <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+      <!-- DYNAMIC GRID — Populated by homepage.js -->
+      <div class="row g-4" id="featuredGrid">
+        <!-- Loading skeletons will appear here, then real data -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== POPULAR AREAS ========== -->
+  <section class="section-padding" style="background:var(--bg-secondary);">
+    <div class="container">
+      <div class="section-header text-center mx-auto" style="max-width:600px;">
+        <div class="section-tag justify-content-center"><i class="bi bi-geo-alt"></i> POPULAR AREAS</div>
+        <h2 class="section-title">Explore by Location</h2>
+        <p class="section-subtitle mx-auto">Browse PGs and rooms in Pune's most popular neighborhoods</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-4 col-md-6">
+          <a href="listings.html?search=Kothrud" class="area-card d-block">
+            <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=500&h=300&fit=crop" alt="Kothrud">
+            <div class="area-card-content">
+              <h5>Kothrud</h5>
+              <p>320+ PGs Available</p>
+            </div>
+          </a>
+        </div>
+        <div class="col-lg-4 col-md-6">
+          <a href="listings.html?search=Hinjewadi" class="area-card d-block">
+            <img src="https://images.unsplash.com/photo-1560448075-cbc16bb4af8e?w=500&h=300&fit=crop" alt="Hinjewadi">
+            <div class="area-card-content">
+              <h5>Hinjewadi</h5>
+              <p>480+ PGs Available</p>
+            </div>
+          </a>
+        </div>
+        <div class="col-lg-4 col-md-6">
+          <a href="listings.html?search=Viman+Nagar" class="area-card d-block">
+            <img src="https://images.unsplash.com/photo-1502672023488-70e25813eb80?w=500&h=300&fit=crop" alt="Viman Nagar">
+            <div class="area-card-content">
+              <h5>Viman Nagar</h5>
+              <p>250+ PGs Available</p>
+            </div>
+          </a>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <a href="listings.html?search=Baner" class="area-card d-block">
+            <img src="https://images.unsplash.com/photo-1554995207-c18c203602cb?w=400&h=300&fit=crop" alt="Baner">
+            <div class="area-card-content">
+              <h5>Baner</h5>
+              <p>200+ PGs</p>
+            </div>
+          </a>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <a href="listings.html?search=Wakad" class="area-card d-block">
+            <img src="https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=400&h=300&fit=crop" alt="Wakad">
+            <div class="area-card-content">
+              <h5>Wakad</h5>
+              <p>180+ PGs</p>
+            </div>
+          </a>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <a href="listings.html?search=Hadapsar" class="area-card d-block">
+            <img src="https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=400&h=300&fit=crop" alt="Hadapsar">
+            <div class="area-card-content">
+              <h5>Hadapsar</h5>
+              <p>150+ PGs</p>
+            </div>
+          </a>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <a href="listings.html?search=Koregaon+Park" class="area-card d-block">
+            <img src="https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=400&h=300&fit=crop" alt="Koregaon Park">
+            <div class="area-card-content">
+              <h5>Koregaon Park</h5>
+              <p>120+ PGs</p>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== WHY NESTIFY ========== -->
+  <section class="section-padding">
+    <div class="container">
+      <div class="section-header text-center mx-auto" style="max-width:600px;">
+        <div class="section-tag justify-content-center"><i class="bi bi-lightning-charge"></i> WHY NESTIFY</div>
+        <h2 class="section-title">We Make PG Hunting Easy</h2>
+        <p class="section-subtitle mx-auto">Everything you need to find and book the perfect PG or room</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-3 col-md-6">
+          <div class="feature-card">
+            <div class="feature-icon"><i class="bi bi-shield-check"></i></div>
+            <h5>Verified Listings</h5>
+            <p>Every PG is physically inspected and verified by our team</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="feature-card">
+            <div class="feature-icon"><i class="bi bi-geo-alt"></i></div>
+            <h5>Map Discovery</h5>
+            <p>Find PGs near your college or office with interactive map</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="feature-card">
+            <div class="feature-icon"><i class="bi bi-chat-dots"></i></div>
+            <h5>Direct Connect</h5>
+            <p>Contact owners directly via WhatsApp or phone call</p>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="feature-card">
+            <div class="feature-icon"><i class="bi bi-currency-rupee"></i></div>
+            <h5>No Brokerage</h5>
+            <p>Zero brokerage. Connect with owners for free, always</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== CTA SECTION ========== -->
+  <section class="section-padding">
+    <div class="container">
+      <div class="cta-section">
+        <h2>Own a PG or Room? List it for Free!</h2>
+        <p>Reach thousands of students and professionals looking for accommodation in Pune</p>
+        <a href="add-listing.html" class="btn btn-white">
+          <i class="bi bi-plus-circle me-2"></i> List Your Property
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="footer">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-4 col-md-6">
+          <div class="footer-brand">
+            <i class="bi bi-house-heart-fill"></i>
+            NEST<span>IFY</span>
+          </div>
+          <p>Pune's most trusted PG and room finder platform. Find verified, affordable accommodations near your college or workplace.</p>
+          <div class="footer-social mt-3">
+            <a href="#"><i class="bi bi-facebook"></i></a>
+            <a href="#"><i class="bi bi-instagram"></i></a>
+            <a href="#"><i class="bi bi-twitter-x"></i></a>
+            <a href="#"><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+        <div class="col-lg-2 col-md-6">
+          <h6>Quick Links</h6>
+          <ul class="footer-links">
+            <li><a href="listings.html">Find PG</a></li>
+            <li><a href="map.html">Map View</a></li>
+            <li><a href="add-listing.html">List Property</a></li>
+            <li><a href="login.html">Login</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <h6>Popular Areas</h6>
+          <ul class="footer-links">
+            <li><a href="listings.html?search=Kothrud">Kothrud</a></li>
+            <li><a href="listings.html?search=Hinjewadi">Hinjewadi</a></li>
+            <li><a href="listings.html?search=Viman+Nagar">Viman Nagar</a></li>
+            <li><a href="listings.html?search=Baner">Baner</a></li>
+            <li><a href="listings.html?search=Wakad">Wakad</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <h6>Support</h6>
+          <ul class="footer-links">
+            <li><a href="#">Help Center</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+            <li><a href="#">Contact Us</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 Nestify. All rights reserved. Made with <i class="bi bi-heart-fill text-accent"></i> in Pune</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- App JS (UI interactions — non-module) -->
+  <script src="js/app.js"></script> 
+  <script type="module" src="js/homepage.js"></script>
+</body>
+</html>

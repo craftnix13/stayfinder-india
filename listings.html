@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find PG & Rooms — Nestify</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-nestify" id="mainNavbar">
+    <div class="container">
+      <a class="navbar-brand navbar-brand-nestify" href="index.html">
+        <i class="bi bi-house-heart-fill"></i> NEST<span>IFY</span>
+      </a>
+      <button class="navbar-toggler navbar-toggler-nestify" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto me-3">
+          <li class="nav-item"><a class="nav-link nav-link-nestify" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link nav-link-nestify active" href="listings.html">Find PG</a></li>
+          <li class="nav-item"><a class="nav-link nav-link-nestify" href="map.html">Map View</a></li>
+          <li class="nav-item"><a class="nav-link nav-link-nestify" href="add-listing.html">List Your Space</a></li>
+        </ul>
+        <div class="nav-auth-section">
+          <a href="login.html" class="btn btn-accent btn-sm-custom"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- PAGE CONTENT -->
+  <section class="page-top section-padding">
+    <div class="container">
+      <!-- Page Header -->
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div>
+          <h2 class="section-title mb-1">Find PG & Rooms in Pune</h2>
+          <p class="text-muted-custom fs-sm" id="resultsCount">Loading listings...</p>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="map.html" class="btn btn-dark-custom btn-sm-custom"><i class="bi bi-map me-1"></i> Map View</a>
+          <select class="form-select-dark" id="sortSelect" style="width:auto;padding:0.4rem 2rem 0.4rem 0.8rem;font-size:0.85rem;">
+            <option>Sort: Recommended</option>
+            <option>Price: Low to High</option>
+            <option>Price: High to Low</option>
+            <option>Newest First</option>
+            <option>Rating</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="row g-3 align-items-end">
+          <div class="col-lg-3 col-md-6">
+            <label class="form-label-dark">Search Location</label>
+            <div class="position-relative">
+              <input type="text" class="form-control-dark" id="searchInput" placeholder="Area, Landmark..." style="padding-left:2.2rem;">
+              <i class="bi bi-search position-absolute" style="top:50%;left:0.75rem;transform:translateY(-50%);color:var(--text-muted);"></i>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-6">
+            <label class="form-label-dark">Type</label>
+            <select class="form-select-dark" id="typeFilter">
+              <option>All Types</option>
+              <option>PG</option>
+              <option>Room</option>
+            </select>
+          </div>
+          <div class="col-lg-2 col-md-6">
+            <label class="form-label-dark">Category</label>
+            <select class="form-select-dark" id="categoryFilter">
+              <option>All</option>
+              <option value="boys">Boys</option>
+              <option value="girls">Girls</option>
+              <option value="coliving">Co-Living</option>
+            </select>
+          </div>
+          <div class="col-lg-2 col-md-6">
+            <label class="form-label-dark">Price Range</label>
+            <select class="form-select-dark" id="priceFilter">
+              <option>Any Price</option>
+              <option>Under ₹5,000</option>
+              <option>₹5,000 - ₹8,000</option>
+              <option>₹8,000 - ₹12,000</option>
+              <option>₹12,000 - ₹20,000</option>
+              <option>Above ₹20,000</option>
+            </select>
+          </div>
+          <div class="col-lg-3 col-md-12">
+            <div class="d-flex gap-2">
+              <div class="form-check-dark form-check d-flex align-items-center gap-2">
+                <input class="form-check-input" type="checkbox" id="acFilter">
+                <label class="form-check-label" for="acFilter">AC</label>
+              </div>
+              <div class="form-check-dark form-check d-flex align-items-center gap-2">
+                <input class="form-check-input" type="checkbox" id="foodFilter">
+                <label class="form-check-label" for="foodFilter">Food</label>
+              </div>
+              <button class="btn btn-accent btn-sm-custom ms-auto" id="filterBtn"><i class="bi bi-funnel"></i> Filter</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DYNAMIC Listing Grid -->
+      <div class="row g-4" id="listingsGrid">
+        <!-- Listings will be loaded dynamically from Firestore -->
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom" style="border:none;margin:0;padding:1rem 0;">
+        <p>© 2025 Nestify. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- App JS (UI interactions) -->
+  <script src="js/app.js"></script>
+  <!-- Firebase Listings Module -->
+  <script type="module" src="js/listings.js"></script>
+
+  <!-- Handle URL search params (for area links from homepage) -->
+  <script type="module">
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const searchParam = urlParams.get('search');
+      if (searchParam) {
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+          searchInput.value = searchParam;
+          // Trigger filter after listings are loaded
+          setTimeout(() => {
+            const filterBtn = document.getElementById('filterBtn');
+            if (filterBtn) filterBtn.click();
+          }, 2000);
+        }
+      }
+    });
+  </script>
+</body>
+</html>

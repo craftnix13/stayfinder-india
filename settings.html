@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings — Nestify</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .settings-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .settings-section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-primary);
+    }
+    .settings-section-title i { color: var(--accent); }
+    .profile-avatar-wrap {
+      position: relative;
+      display: inline-block;
+    }
+    .profile-avatar {
+      width: 90px; height: 90px;
+      border-radius: 50%;
+      border: 3px solid var(--accent);
+      object-fit: cover;
+    }
+    .avatar-edit-btn {
+      position: absolute;
+      bottom: 2px; right: 2px;
+      width: 28px; height: 28px;
+      background: var(--accent);
+      border: 2px solid var(--bg-card);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: #fff;
+      font-size: 0.75rem;
+    }
+    .role-badge-display {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.9rem;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .role-badge-display.admin { background: rgba(255,61,61,0.15); color: var(--danger); border: 1px solid rgba(255,61,61,0.3); }
+    .role-badge-display.client { background: var(--accent-subtle); color: var(--accent); border: 1px solid rgba(255,107,0,0.3); }
+    .role-badge-display.user { background: rgba(41,182,246,0.15); color: var(--info); border: 1px solid rgba(41,182,246,0.3); }
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .toggle-row:last-child { border-bottom: none; }
+    .toggle-row-info h6 { font-size: 0.9rem; margin-bottom: 0.15rem; }
+    .toggle-row-info p { font-size: 0.8rem; color: var(--text-muted); margin: 0; }
+    .form-switch .form-check-input {
+      width: 2.5em; height: 1.3em;
+      cursor: pointer;
+      background-color: var(--bg-input);
+      border-color: var(--border-light);
+    }
+    .form-switch .form-check-input:checked { background-color: var(--accent); border-color: var(--accent); }
+    .danger-zone { border-color: rgba(255,61,61,0.4) !important; }
+    .danger-zone .settings-section-title { color: var(--danger); }
+    .danger-zone .settings-section-title i { color: var(--danger); }
+    .stat-mini {
+      background: var(--bg-input);
+      border-radius: var(--radius-md);
+      padding: 0.75rem 1rem;
+      text-align: center;
+    }
+    .stat-mini h4 { font-size: 1.4rem; font-weight: 700; color: var(--accent); margin: 0; }
+    .stat-mini p { font-size: 0.75rem; color: var(--text-muted); margin: 0; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-nestify" id="mainNavbar">
+    <div class="container-fluid px-3">
+      <a class="navbar-brand navbar-brand-nestify" href="index.html"><i class="bi bi-house-heart-fill"></i> NEST<span>IFY</span></a>
+      <div class="ms-auto nav-auth-section"></div>
+    </div>
+  </nav>
+
+  <div class="dashboard-layout">
+    <div class="container-fluid">
+      <div class="row">
+
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3 p-0">
+          <div class="dashboard-sidebar">
+            <nav class="dashboard-sidebar-nav">
+              <a href="client-dashboard.html" class="sidebar-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+              <a href="add-listing.html" class="sidebar-link"><i class="bi bi-plus-circle"></i> Add Listing</a>
+              <a href="my-listings.html" class="sidebar-link"><i class="bi bi-building"></i> My Listings</a>
+              <a href="#" class="sidebar-link"><i class="bi bi-chat-dots"></i> Leads</a>
+              <a href="reviews.html" class="sidebar-link"><i class="bi bi-star"></i> Reviews</a>
+              <a href="settings.html" class="sidebar-link active"><i class="bi bi-gear"></i> Settings</a>
+            </nav>
+          </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+          <div class="dashboard-content">
+
+            <!-- Loading -->
+            <div id="settingsLoading" class="text-center py-5">
+              <div class="spinner-border text-accent"></div>
+              <p class="text-muted-custom mt-2">Loading settings...</p>
+            </div>
+
+            <div id="settingsContent" style="display:none;">
+              <div class="mb-4">
+                <h3 class="fw-700 mb-1">Settings</h3>
+                <p class="text-muted-custom fs-sm">Manage your account and preferences</p>
+              </div>
+
+              <div class="row g-4">
+                <div class="col-lg-8">
+
+                  <!-- Profile Section -->
+                  <div class="settings-section">
+                    <h5 class="settings-section-title"><i class="bi bi-person-circle"></i> Profile Information</h5>
+                    <div class="d-flex align-items-start gap-4 flex-wrap mb-4">
+                      <div class="profile-avatar-wrap">
+                        <img id="profileAvatar" src="" alt="Profile" class="profile-avatar">
+                        <div class="avatar-edit-btn" title="Photo is synced from Google">
+                          <i class="bi bi-google"></i>
+                        </div>
+                      </div>
+                      <div class="flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                          <h5 id="profileName" class="mb-0">—</h5>
+                          <span id="profileRoleBadge" class="role-badge-display user">user</span>
+                        </div>
+                        <p id="profileEmail" class="text-muted-custom fs-sm mb-2">—</p>
+                        <p class="text-muted-custom fs-sm mb-0">
+                          <i class="bi bi-shield-check text-accent me-1"></i>
+                          Profile photo and name are synced from your Google account.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label class="form-label-dark">Display Name</label>
+                        <input type="text" id="displayName" class="form-control-dark" placeholder="Your name">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label-dark">WhatsApp Number</label>
+                        <input type="tel" id="whatsappNumber" class="form-control-dark" placeholder="+91 98765 43210">
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label-dark">City</label>
+                        <select id="userCity" class="form-select-dark">
+                          <option value="">Select City</option>
+                          <option value="Pune">Pune</option>
+                          <option value="Mumbai">Mumbai</option>
+                          <option value="Bangalore">Bangalore</option>
+                          <option value="Delhi">Delhi</option>
+                          <option value="Hyderabad">Hyderabad</option>
+                          <option value="Chennai">Chennai</option>
+                        </select>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label-dark">Business / PG Name</label>
+                        <input type="text" id="businessName" class="form-control-dark" placeholder="Optional">
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label-dark">Bio</label>
+                        <textarea id="userBio" class="form-control-dark" rows="3"
+                                  placeholder="Tell tenants a bit about yourself..."></textarea>
+                      </div>
+                    </div>
+
+                    <div class="mt-3 d-flex gap-2">
+                      <button class="btn btn-accent" id="saveProfileBtn" style="padding:0.55rem 1.5rem;">
+                        <i class="bi bi-check-lg me-2"></i>Save Changes
+                      </button>
+                      <div id="profileSaveMsg" style="display:none;align-items:center;gap:0.4rem;color:var(--success);font-size:0.85rem;">
+                        <i class="bi bi-check-circle-fill"></i> Saved!
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Notification Settings -->
+                  <div class="settings-section">
+                    <h5 class="settings-section-title"><i class="bi bi-bell"></i> Notifications</h5>
+
+                    <div class="toggle-row">
+                      <div class="toggle-row-info">
+                        <h6>New Lead Alerts</h6>
+                        <p>Get notified when someone contacts you about a listing</p>
+                      </div>
+                      <div class="form-check form-switch">
+                        <input class="form-check-input notify-toggle" type="checkbox" id="notifLeads" checked data-pref="notifLeads">
+                      </div>
+                    </div>
+                    <div class="toggle-row">
+                      <div class="toggle-row-info">
+                        <h6>Listing Status Updates</h6>
+                        <p>Know when your listing is approved or rejected by admin</p>
+                      </div>
+                      <div class="form-check form-switch">
+                        <input class="form-check-input notify-toggle" type="checkbox" id="notifStatus" checked data-pref="notifStatus">
+                      </div>
+                    </div>
+                    <div class="toggle-row">
+                      <div class="toggle-row-info">
+                        <h6>New Reviews</h6>
+                        <p>Get notified when someone reviews your property</p>
+                      </div>
+                      <div class="form-check form-switch">
+                        <input class="form-check-input notify-toggle" type="checkbox" id="notifReviews" checked data-pref="notifReviews">
+                      </div>
+                    </div>
+                    <div class="toggle-row">
+                      <div class="toggle-row-info">
+                        <h6>Weekly Summary</h6>
+                        <p>Weekly report of your listing views and leads</p>
+                      </div>
+                      <div class="form-check form-switch">
+                        <input class="form-check-input notify-toggle" type="checkbox" id="notifWeekly" data-pref="notifWeekly">
+                      </div>
+                    </div>
+                    <div class="toggle-row">
+                      <div class="toggle-row-info">
+                        <h6>Promotional Emails</h6>
+                        <p>Tips, platform updates, and new feature announcements</p>
+                      </div>
+                      <div class="form-check form-switch">
+                        <input class="form-check-input notify-toggle" type="checkbox" id="notifPromo" data-pref="notifPromo">
+                      </div>
+                    </div>
+
+                    <button class="btn btn-dark-custom mt-3" id="saveNotifBtn" style="padding:0.45rem 1.2rem;font-size:0.85rem;">
+                      <i class="bi bi-save me-1"></i> Save Preferences
+                    </button>
+                  </div>
+
+                  <!-- Privacy Settings -->
+                  <div class="settings-section">
+                    <h5 class="settings-section-title"><i class="bi bi-shield-lock"></i> Privacy</h5>
+                    <div class="toggle-row">
+                      <div class="toggle-row-info">
+                        <h6>Show Phone Number Publicly</h6>
+                        <p>Display your phone number on listing detail pages</p>
+                      </div>
+                      <div class="form-check form-switch">
+                        <input class="form-check-input notify-toggle" type="checkbox" id="privacyPhone" checked data-pref="privacyPhone">
+                      </div>
+                    </div>
+                    <div class="toggle-row">
+                      <div class="toggle-row-info">
+                        <h6>Show Profile in Search</h6>
+                        <p>Allow your owner profile to appear in search results</p>
+                      </div>
+                      <div class="form-check form-switch">
+                        <input class="form-check-input notify-toggle" type="checkbox" id="privacySearch" checked data-pref="privacySearch">
+                      </div>
+                    </div>
+                    <button class="btn btn-dark-custom mt-3" id="savePrivacyBtn" style="padding:0.45rem 1.2rem;font-size:0.85rem;">
+                      <i class="bi bi-save me-1"></i> Save Privacy Settings
+                    </button>
+                  </div>
+
+                  <!-- Danger Zone -->
+                  <div class="settings-section danger-zone">
+                    <h5 class="settings-section-title"><i class="bi bi-exclamation-triangle"></i> Danger Zone</h5>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                      <div>
+                        <h6 style="font-size:0.9rem;margin-bottom:0.25rem;">Delete Account</h6>
+                        <p class="text-muted-custom fs-sm mb-0">Permanently delete your account and all your listings. This cannot be undone.</p>
+                      </div>
+                      <button class="btn btn-dark-custom" id="deleteAccountBtn"
+                              style="color:var(--danger);border-color:var(--danger);padding:0.45rem 1.2rem;font-size:0.85rem;white-space:nowrap;">
+                        <i class="bi bi-trash me-1"></i> Delete Account
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- Right sidebar -->
+                <div class="col-lg-4">
+
+                  <!-- Account Stats -->
+                  <div class="settings-section">
+                    <h5 class="settings-section-title"><i class="bi bi-bar-chart"></i> Your Stats</h5>
+                    <div class="row g-2 mb-3">
+                      <div class="col-6">
+                        <div class="stat-mini">
+                          <h4 id="statListings">—</h4>
+                          <p>Listings</p>
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="stat-mini">
+                          <h4 id="statViews">—</h4>
+                          <p>Total Views</p>
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="stat-mini">
+                          <h4 id="statApproved">—</h4>
+                          <p>Approved</p>
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="stat-mini">
+                          <h4 id="statReviews">—</h4>
+                          <p>Reviews</p>
+                        </div>
+                      </div>
+                    </div>
+                    <p class="text-muted-custom" style="font-size:0.75rem;">
+                      <i class="bi bi-calendar3 text-accent me-1"></i>
+                      Member since: <span id="memberSince">—</span>
+                    </p>
+                  </div>
+
+                  <!-- Account Info -->
+                  <div class="settings-section">
+                    <h5 class="settings-section-title"><i class="bi bi-info-circle"></i> Account</h5>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span class="text-muted-custom fs-sm">Login Method</span>
+                      <span class="fs-sm fw-600"><i class="bi bi-google text-accent me-1"></i>Google</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span class="text-muted-custom fs-sm">Account Type</span>
+                      <span id="accountTypeText" class="fs-sm fw-600">—</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                      <span class="text-muted-custom fs-sm">Email Verified</span>
+                      <span class="fs-sm fw-600 text-accent"><i class="bi bi-check-circle-fill me-1"></i>Yes</span>
+                    </div>
+                    <hr style="border-color:var(--border-color);">
+                    <button class="btn btn-dark-custom w-100" id="logoutBtn" style="padding:0.55rem;">
+                      <i class="bi bi-box-arrow-right me-2"></i>Logout
+                    </button>
+                  </div>
+
+                  <!-- Become Client -->
+                  <div class="settings-section" id="becomeClientCard" style="display:none;">
+                    <h5 class="settings-section-title"><i class="bi bi-person-badge"></i> Upgrade Account</h5>
+                    <p class="text-muted-custom fs-sm mb-3">Become a Client to list your properties and manage leads.</p>
+                    <button class="btn btn-accent w-100" id="becomeClientBtn" style="padding:0.6rem;">
+                      <i class="bi bi-arrow-up-circle me-2"></i>Become a Client
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirm Modal -->
+  <div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background:var(--bg-card);border-color:var(--border-color);">
+        <div class="modal-header" style="border-color:var(--border-color);">
+          <h5 class="modal-title text-light"><i class="bi bi-exclamation-triangle text-danger me-2"></i>Delete Account</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-muted-custom">
+          <p>Are you sure you want to permanently delete your account? This will:</p>
+          <ul style="font-size:0.88rem;">
+            <li class="mb-1">Delete all your listings</li>
+            <li class="mb-1">Remove all your data from Nestify</li>
+            <li>This action <strong class="text-danger">cannot be undone</strong></li>
+          </ul>
+          <input type="text" class="form-control-dark mt-3" id="deleteConfirmInput"
+                 placeholder='Type "DELETE" to confirm'>
+        </div>
+        <div class="modal-footer" style="border-color:var(--border-color);">
+          <button class="btn btn-dark-custom" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-danger" id="confirmDeleteBtn" disabled>Delete My Account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, getDocs, collection, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/11.7.3/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCB3n4oRMttZP3hEstN1WhQIUSfnMcNK3o",
+      authDomain: "stayfinder-india.firebaseapp.com",
+      projectId: "stayfinder-india",
+      storageBucket: "stayfinder-india.firebasestorage.app",
+      messagingSenderId: "645510509071",
+      appId: "1:645510509071:web:d9924d4780d3f185a5e97a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+
+    let currentUser = null;
+    let userData = null;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = 'login.html'; return; }
+      currentUser = user;
+
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        userData = snap.exists() ? snap.data() : {};
+      } catch(e) { userData = {}; }
+
+      populateSettings();
+      loadStats();
+      document.getElementById('settingsLoading').style.display = 'none';
+      document.getElementById('settingsContent').style.display = 'block';
+    });
+
+    function populateSettings() {
+      // Profile avatar & info
+      const photo = currentUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.displayName||'U')}&background=ff6b00&color=fff&size=90`;
+      document.getElementById('profileAvatar').src = photo;
+      document.getElementById('profileName').textContent = currentUser.displayName || 'Unknown';
+      document.getElementById('profileEmail').textContent = currentUser.email || '';
+
+      // Role badge
+      const role = userData.role || 'user';
+      const roleBadge = document.getElementById('profileRoleBadge');
+      roleBadge.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+      roleBadge.className = `role-badge-display ${role}`;
+
+      document.getElementById('accountTypeText').textContent = role.charAt(0).toUpperCase() + role.slice(1);
+
+      // Show "Become Client" card only for regular users
+      if (role === 'user') document.getElementById('becomeClientCard').style.display = 'block';
+
+      // Populate form fields
+      document.getElementById('displayName').value = userData.name || currentUser.displayName || '';
+      document.getElementById('whatsappNumber').value = userData.whatsapp || '';
+      document.getElementById('userCity').value = userData.city || '';
+      document.getElementById('businessName').value = userData.businessName || '';
+      document.getElementById('userBio').value = userData.bio || '';
+
+      // Notification toggles
+      const prefs = userData.preferences || {};
+      ['notifLeads','notifStatus','notifReviews','notifWeekly','notifPromo','privacyPhone','privacySearch'].forEach(key => {
+        const el = document.getElementById(key);
+        if (el && prefs[key] !== undefined) el.checked = prefs[key];
+      });
+
+      // Member since
+      const joined = userData.createdAt?.toDate?.();
+      if (joined) {
+        document.getElementById('memberSince').textContent = joined.toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' });
+      }
+    }
+
+    async function loadStats() {
+      try {
+        const q = query(collection(db, "listings"), where("ownerId", "==", currentUser.uid));
+        const snap = await getDocs(q);
+        const listings = snap.docs.map(d => d.data());
+        document.getElementById('statListings').textContent = listings.length;
+        document.getElementById('statApproved').textContent = listings.filter(l => l.status === 'approved').length;
+        document.getElementById('statViews').textContent = listings.reduce((s,l) => s+(l.viewsCount||0), 0).toLocaleString('en-IN');
+      } catch(e) {}
+
+      try {
+        const rq = query(collection(db, "reviews"), where("listingOwnerId", "==", currentUser.uid));
+        const rsnap = await getDocs(rq);
+        document.getElementById('statReviews').textContent = rsnap.size;
+      } catch(e) { document.getElementById('statReviews').textContent = '0'; }
+    }
+
+    // Save profile
+    document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('saveProfileBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+      try {
+        await updateDoc(doc(db, "users", currentUser.uid), {
+          name:         document.getElementById('displayName').value.trim(),
+          whatsapp:     document.getElementById('whatsappNumber').value.trim(),
+          city:         document.getElementById('userCity').value,
+          businessName: document.getElementById('businessName').value.trim(),
+          bio:          document.getElementById('userBio').value.trim(),
+        });
+        const msgEl = document.getElementById('profileSaveMsg');
+        msgEl.style.display = 'flex';
+        setTimeout(() => msgEl.style.display = 'none', 3000);
+        if (window.showToast) window.showToast('Profile updated!', 'success');
+      } catch(err) {
+        if (window.showToast) window.showToast('Save failed: ' + err.message, 'error');
+      }
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-check-lg me-2"></i>Save Changes';
+    });
+
+    // Save notifications
+    async function saveToggles(ids) {
+      const prefs = {};
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) prefs[id] = el.checked;
+      });
+      try {
+        await updateDoc(doc(db, "users", currentUser.uid), { preferences: prefs });
+        if (window.showToast) window.showToast('Preferences saved!', 'success');
+      } catch(err) {
+        if (window.showToast) window.showToast('Save failed.', 'error');
+      }
+    }
+
+    document.getElementById('saveNotifBtn').addEventListener('click', () =>
+      saveToggles(['notifLeads','notifStatus','notifReviews','notifWeekly','notifPromo'])
+    );
+    document.getElementById('savePrivacyBtn').addEventListener('click', () =>
+      saveToggles(['privacyPhone','privacySearch'])
+    );
+
+    // Become Client
+    document.getElementById('becomeClientBtn').addEventListener('click', async () => {
+      try {
+        await updateDoc(doc(db, "users", currentUser.uid), { role: 'client' });
+        if (window.showToast) window.showToast('You are now a Client! Redirecting...', 'success');
+        setTimeout(() => window.location.href = 'client-dashboard.html', 1500);
+      } catch(err) {
+        if (window.showToast) window.showToast('Failed: ' + err.message, 'error');
+      }
+    });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      signOut(auth).then(() => window.location.href = 'login.html');
+    });
+
+    // Delete account
+    document.getElementById('deleteAccountBtn').addEventListener('click', () => deleteModal.show());
+
+    document.getElementById('deleteConfirmInput').addEventListener('input', function() {
+      document.getElementById('confirmDeleteBtn').disabled = this.value !== 'DELETE';
+    });
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+      try {
+        // Delete all listings by this user
+        const q = query(collection(db, "listings"), where("ownerId", "==", currentUser.uid));
+        const snap = await getDocs(q);
+        for (const d of snap.docs) await deleteDoc(doc(db, "listings", d.id));
+
+        // Delete user document
+        await deleteDoc(doc(db, "users", currentUser.uid));
+
+        // Delete Firebase Auth user
+        await currentUser.delete();
+
+        deleteModal.hide();
+        window.location.href = 'login.html';
+      } catch(err) {
+        if (window.showToast) window.showToast('Delete failed: ' + err.message, 'error');
+        // If re-auth needed
+        if (err.code === 'auth/requires-recent-login') {
+          if (window.showToast) window.showToast('Please logout and login again, then try deleting.', 'warning');
+        }
+      }
+    });
+  </script>
+</body>
+</html>
